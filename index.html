@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geotag Photo</title>
+<style>
+  :root{
+    --bg:#F5F5F7;
+    --card:#FFFFFF;
+    --border:#D2D2D7;
+    --text:#1D1D1F;
+    --text-secondary:#6E6E73;
+    --blue:#0071E3;
+    --blue-hover:#0077ED;
+    --blue-press:#006EDB;
+    --red:#FF3B30;
+    --radius-lg:18px;
+    --radius-md:12px;
+    --radius-sm:8px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:64px 24px 100px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:48px;
+  }
+  header h1{
+    font-size:clamp(32px,5vw,44px);
+    font-weight:600;
+    letter-spacing:-0.02em;
+    margin:0 0 10px;
+  }
+  header p{
+    font-size:17px;
+    color:var(--text-secondary);
+    margin:0;
+    font-weight:400;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:380px 1fr;
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width:860px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .card{
+    background:var(--card);
+    border-radius:var(--radius-lg);
+    padding:32px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+  }
+  .card h2{
+    font-size:20px;
+    font-weight:600;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .card .sub{
+    font-size:13px;
+    color:var(--text-secondary);
+    margin:0 0 24px;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:500;
+    color:var(--text);
+    margin-bottom:7px;
+    margin-top:18px;
+  }
+  label:first-of-type{margin-top:0;}
+  input[type=date], input[type=time], input[type=number], input[type=text]{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    padding:11px 13px;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    background:#FBFBFD;
+    color:var(--text);
+    -webkit-appearance:none;
+  }
+  input:focus{
+    outline:none;
+    border-color:var(--blue);
+    box-shadow:0 0 0 4px rgba(0,113,227,0.12);
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .file-drop{
+    border:1px dashed var(--border);
+    border-radius:var(--radius-md);
+    padding:22px 16px;
+    text-align:center;
+    cursor:pointer;
+    font-size:13.5px;
+    color:var(--text-secondary);
+    background:#FBFBFD;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .file-drop:hover{border-color:var(--blue);background:#F5FAFF;}
+  .file-drop.dragover{border-color:var(--blue);background:#EAF4FF;border-style:solid;}
+  .file-drop.has-file{color:var(--blue);border-color:var(--blue);border-style:solid;background:#F5FAFF;}
+  input[type=file]{display:none;}
+  .ghost-btn{
+    margin-top:10px;
+    width:100%;
+    background:#FFFFFF;
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:500;
+    padding:11px;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .ghost-btn:hover{background:#F5F5F7;border-color:#B8B8BD;}
+  .primary-btn{
+    margin-top:28px;
+    width:100%;
+    background:var(--blue);
+    color:#fff;
+    border:none;
+    font-family:inherit;
+    font-weight:600;
+    font-size:15px;
+    padding:14px;
+    border-radius:980px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .primary-btn:hover{background:var(--blue-hover);}
+  .primary-btn:active{background:var(--blue-press);}
+  .primary-btn:disabled{background:#B8B8BD;cursor:not-allowed;}
+  .status{
+    margin-top:12px;
+    font-size:12.5px;
+    color:var(--text-secondary);
+    min-height:16px;
+    text-align:center;
+  }
+  .status.err{color:var(--red);}
+  .preview-side{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .canvas-frame{
+    background:var(--card);
+    border-radius:var(--radius-lg);
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+    padding:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:380px;
+  }
+  .canvas-frame canvas{
+    max-width:100%;
+    max-height:660px;
+    border-radius:var(--radius-md);
+    display:block;
+  }
+  .canvas-frame .empty{
+    color:#AEAEB2;
+    font-size:14px;
+    text-align:center;
+    line-height:1.6;
+  }
+  .secondary-btn{
+    align-self:flex-start;
+    background:#fff;
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:inherit;
+    font-weight:500;
+    font-size:14px;
+    padding:11px 22px;
+    border-radius:980px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .secondary-btn:hover:not(:disabled){background:#F5F5F7;}
+  .secondary-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .note{
+    font-size:12px;
+    color:var(--text-secondary);
+    line-height:1.6;
+    max-width:540px;
+    padding:0 4px;
+  }
+  .ratio-group{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+  }
+  .ratio-opt{
+    padding:9px 4px;
+    font-size:12.5px;
+    font-weight:500;
+    text-align:center;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    background:#FBFBFD;
+    color:var(--text-secondary);
+    cursor:pointer;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .ratio-opt:hover{border-color:#B8B8BD;}
+  .ratio-opt.active{
+    background:var(--blue);
+    border-color:var(--blue);
+    color:#fff;
+  }
+  .crop-preview-wrap{
+    margin-top:18px;
+  }
+  #cropCanvas{
+    display:block;
+    max-width:100%;
+    border-radius:var(--radius-md);
+    background:#EAEAEC;
+    cursor:grab;
+    touch-action:none;
+    box-shadow:0 0 0 1px var(--border);
+  }
+  #cropCanvas:active{cursor:grabbing;}
+  .crop-hint{
+    font-size:11px;
+    color:var(--text-secondary);
+    text-align:center;
+    margin:8px 0 6px;
+  }
+  #zoomSlider{
+    width:100%;
+    accent-color:var(--blue);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Geotag Photo</h1>
+    <p>Tempelkan koordinat, alamat, dan cuplikan peta ke fotomu — lengkap dengan pilihan rasio.</p>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Data lokasi</h2>
+      <p class="sub">Isi semua kolom, lalu buat gambarnya.</p>
+
+      <label for="foto">Foto</label>
+      <div class="file-drop" id="dropZone">Klik untuk pilih foto</div>
+      <input type="file" id="foto" accept="image/*">
+
+      <label>Gaya peta</label>
+      <div class="ratio-group" id="mapStyleGroup" style="grid-template-columns:1fr 1fr;">
+        <div class="ratio-opt active" data-style="jalan">Jalan</div>
+        <div class="ratio-opt" data-style="satelit">Satelit</div>
+      </div>
+
+      <label>Rasio foto</label>
+      <div class="ratio-group" id="ratioGroup">
+        <div class="ratio-opt active" data-ratio="original">Asli</div>
+        <div class="ratio-opt" data-ratio="4:3">4:3</div>
+        <div class="ratio-opt" data-ratio="3:4">3:4</div>
+        <div class="ratio-opt" data-ratio="1:1">1:1</div>
+        <div class="ratio-opt" data-ratio="16:9">16:9</div>
+        <div class="ratio-opt" data-ratio="9:16">9:16</div>
+      </div>
+
+      <div class="crop-preview-wrap" id="cropPreviewWrap" style="display:none;">
+        <canvas id="cropCanvas"></canvas>
+        <div class="crop-hint">Geser foto untuk atur posisi</div>
+        <input type="range" id="zoomSlider" min="1" max="2.5" step="0.01" value="1">
+      </div>
+
+      <div class="row2">
+        <div>
+          <label for="tanggal">Tanggal <span style="font-weight:400;color:var(--text-secondary)">(opsional)</span></label>
+          <input type="date" id="tanggal">
+        </div>
+        <div>
+          <label for="waktu">Waktu <span style="font-weight:400;color:var(--text-secondary)">(opsional)</span></label>
+          <input type="time" id="waktu">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label for="lat">Latitude</label>
+          <input type="number" id="lat" step="any" placeholder="-6.200000">
+        </div>
+        <div>
+          <label for="lng">Longitude</label>
+          <input type="number" id="lng" step="any" placeholder="106.816666">
+        </div>
+      </div>
+      <button class="ghost-btn" id="locateBtn">Pakai lokasi saya sekarang</button>
+      <button class="ghost-btn" id="geocodeBtn">Isi alamat otomatis dari koordinat</button>
+
+      <label for="jalan">Jalan</label>
+      <input type="text" id="jalan" placeholder="Jl. Contoh No. 1">
+
+      <label for="desa">Desa/Kelurahan</label>
+      <input type="text" id="desa" placeholder="Desa/Kelurahan">
+
+      <div class="row2">
+        <div>
+          <label for="kecamatan">Kecamatan</label>
+          <input type="text" id="kecamatan" placeholder="Kecamatan">
+        </div>
+        <div>
+          <label for="kota">Kabupaten/Kota</label>
+          <input type="text" id="kota" placeholder="Kabupaten/Kota">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label for="provinsi">Provinsi</label>
+          <input type="text" id="provinsi" placeholder="Provinsi">
+        </div>
+        <div>
+          <label for="kodepos">Kode Pos</label>
+          <input type="text" id="kodepos" placeholder="29255">
+        </div>
+      </div>
+
+      <button class="primary-btn" id="generateBtn">Buat gambar</button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="preview-side">
+      <div class="canvas-frame" id="canvasFrame">
+        <div class="empty">Hasil akan muncul di sini<br>setelah data diisi dan gambar dibuat</div>
+      </div>
+      <button class="secondary-btn" id="downloadBtn" disabled>Unduh gambar</button>
+      <p class="note">Peta memakai Mapbox, Made By Reynold</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const fotoInput = document.getElementById('foto');
+const dropZone = document.getElementById('dropZone');
+const generateBtn = document.getElementById('generateBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const statusEl = document.getElementById('status');
+const canvasFrame = document.getElementById('canvasFrame');
+const locateBtn = document.getElementById('locateBtn');
+const ratioGroup = document.getElementById('ratioGroup');
+let selectedRatio = 'original';
+ratioGroup.querySelectorAll('.ratio-opt').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    ratioGroup.querySelectorAll('.ratio-opt').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedRatio = btn.dataset.ratio;
+    cropZoom = 1; panFracX = 0; panFracY = 0;
+    zoomSlider.value = 1;
+    drawCropPreview();
+  });
+});
+
+const mapStyleGroup = document.getElementById('mapStyleGroup');
+let selectedMapStyle = 'jalan';
+mapStyleGroup.querySelectorAll('.ratio-opt').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    mapStyleGroup.querySelectorAll('.ratio-opt').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMapStyle = btn.dataset.style;
+  });
+});
+
+let uploadedImg = null;
+let finalCanvas = null;
+
+// crop state: cropZoom is a multiplier over the "cover" fit, panFracX/Y range -1..1
+let cropZoom = 1;
+let panFracX = 0;
+let panFracY = 0;
+const cropCanvas = document.getElementById('cropCanvas');
+const cropPreviewWrap = document.getElementById('cropPreviewWrap');
+const zoomSlider = document.getElementById('zoomSlider');
+const cropCtx = cropCanvas.getContext('2d');
+
+function computeGeom(frameW, frameH, imgW, imgH, zoom){
+  const baseScale = Math.max(frameW / imgW, frameH / imgH);
+  const scale = baseScale * zoom;
+  const drawW = imgW * scale, drawH = imgH * scale;
+  return {
+    scale,
+    drawW,
+    drawH,
+    maxPanX: Math.max(0, (drawW - frameW) / 2),
+    maxPanY: Math.max(0, (drawH - frameH) / 2)
+  };
+}
+
+function currentRatioValue(){
+  const ratioMap = { 'original': uploadedImg.width / uploadedImg.height, '1:1': 1, '4:3': 4/3, '3:4': 3/4, '16:9': 16/9, '9:16': 9/16 };
+  return ratioMap[selectedRatio] || (uploadedImg.width / uploadedImg.height);
+}
+
+function drawCropPreview(){
+  if(!uploadedImg) return;
+  const ratio = currentRatioValue();
+  const previewMax = 320;
+  let frameW, frameH;
+  if(ratio >= 1){ frameW = previewMax; frameH = Math.round(previewMax / ratio); }
+  else { frameH = previewMax; frameW = Math.round(previewMax * ratio); }
+  cropCanvas.width = frameW;
+  cropCanvas.height = frameH;
+
+  const geom = computeGeom(frameW, frameH, uploadedImg.width, uploadedImg.height, cropZoom);
+  const x = (frameW - geom.drawW) / 2 + panFracX * geom.maxPanX;
+  const y = (frameH - geom.drawH) / 2 + panFracY * geom.maxPanY;
+  cropCtx.clearRect(0, 0, frameW, frameH);
+  cropCtx.drawImage(uploadedImg, x, y, geom.drawW, geom.drawH);
+}
+
+let dragging = false;
+let dragStartX = 0, dragStartY = 0, dragStartPanX = 0, dragStartPanY = 0;
+
+function pointerDown(clientX, clientY){
+  dragging = true;
+  dragStartX = clientX; dragStartY = clientY;
+  dragStartPanX = panFracX; dragStartPanY = panFracY;
+}
+function pointerMove(clientX, clientY){
+  if(!dragging || !uploadedImg) return;
+  const ratio = currentRatioValue();
+  const frameW = cropCanvas.width, frameH = cropCanvas.height;
+  const geom = computeGeom(frameW, frameH, uploadedImg.width, uploadedImg.height, cropZoom);
+  const dx = clientX - dragStartX, dy = clientY - dragStartY;
+  panFracX = geom.maxPanX > 0 ? Math.max(-1, Math.min(1, dragStartPanX + dx / geom.maxPanX)) : 0;
+  panFracY = geom.maxPanY > 0 ? Math.max(-1, Math.min(1, dragStartPanY + dy / geom.maxPanY)) : 0;
+  drawCropPreview();
+}
+function pointerUp(){ dragging = false; }
+
+cropCanvas.addEventListener('mousedown', (e) => pointerDown(e.clientX, e.clientY));
+window.addEventListener('mousemove', (e) => pointerMove(e.clientX, e.clientY));
+window.addEventListener('mouseup', pointerUp);
+cropCanvas.addEventListener('touchstart', (e) => { const t = e.touches[0]; pointerDown(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
+window.addEventListener('touchmove', (e) => { if(dragging){ const t = e.touches[0]; pointerMove(t.clientX, t.clientY); e.preventDefault(); } }, { passive: false });
+window.addEventListener('touchend', pointerUp);
+
+zoomSlider.addEventListener('input', () => {
+  cropZoom = parseFloat(zoomSlider.value);
+  drawCropPreview();
+});
+
+dropZone.addEventListener('click', () => fotoInput.click());
+fotoInput.addEventListener('change', () => {
+  const file = fotoInput.files[0];
+  if(file) handleFile(file);
+});
+
+['dragenter', 'dragover'].forEach((evt) => {
+  dropZone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.add('dragover');
+  });
+});
+['dragleave', 'dragend'].forEach((evt) => {
+  dropZone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove('dragover');
+  });
+});
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){
+    setStatus('File yang di-drop bukan gambar.', true);
+    return;
+  }
+  fotoInput.files = e.dataTransfer.files;
+  handleFile(file);
+});
+
+function handleFile(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      uploadedImg = img;
+      dropZone.textContent = file.name;
+      dropZone.classList.add('has-file');
+      cropZoom = 1; panFracX = 0; panFracY = 0;
+      zoomSlider.value = 1;
+      cropPreviewWrap.style.display = 'block';
+      drawCropPreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+locateBtn.addEventListener('click', () => {
+  if(!navigator.geolocation){
+    setStatus('Browser ini tidak mendukung geolokasi.', true);
+    return;
+  }
+  setStatus('Mengambil lokasi...');
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('lng').value = pos.coords.longitude.toFixed(6);
+      setStatus('Lokasi berhasil diambil. Mencari alamat...');
+      await fillAddress();
+      setStatus('Lokasi dan alamat berhasil diisi.');
+    },
+    () => setStatus('Gagal mengambil lokasi. Isi manual saja.', true)
+  );
+});
+
+const geocodeBtn = document.getElementById('geocodeBtn');
+geocodeBtn.addEventListener('click', async () => {
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lng = parseFloat(document.getElementById('lng').value);
+  if(isNaN(lat) || isNaN(lng)){
+    setStatus('Isi latitude dan longitude dulu.', true);
+    return;
+  }
+  setStatus('Mencari alamat...');
+  const ok = await fillAddress();
+  setStatus(ok ? 'Alamat berhasil diisi. Boleh dikoreksi manual kalau kurang tepat.' : 'Alamat tidak ditemukan, isi manual saja.', !ok);
+});
+
+async function fillAddress(){
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lng = parseFloat(document.getElementById('lng').value);
+  if(isNaN(lat) || isNaN(lng)) return false;
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`);
+    const data = await res.json();
+    const addr = data.address || {};
+    document.getElementById('jalan').value = addr.road || addr.pedestrian || addr.footway || '';
+    document.getElementById('desa').value = addr.village || addr.suburb || addr.hamlet || addr.neighbourhood || '';
+    document.getElementById('kecamatan').value = addr.city_district || addr.suburb || addr.district || '';
+    document.getElementById('kota').value = addr.city || addr.town || addr.county || addr.regency || '';
+    document.getElementById('provinsi').value = addr.state || '';
+    document.getElementById('kodepos').value = addr.postcode || '';
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function setStatus(msg, isErr){
+  statusEl.textContent = msg;
+  statusEl.className = 'status' + (isErr ? ' err' : '');
+}
+
+function formatCoordPart(value, posLetter, negLetter){
+  return `${Math.abs(value).toFixed(6)}\u00B0 ${value >= 0 ? posLetter : negLetter}`;
+}
+
+function project(lat, lon, zoom){
+  const scale = 256 * Math.pow(2, zoom);
+  const x = (lon + 180) / 360 * scale;
+  const sinLat = Math.sin(lat * Math.PI / 180);
+  const y = (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * scale;
+  return { x, y };
+}
+
+// Mapbox access token embedded directly in the code — replace with your own token.
+// WARNING: anyone who opens/views this file's source can see and use this token.
+const MAPBOX_TOKEN = 'pk.eyJ1IjoicmV5bnMyNSIsImEiOiJjbXU2Y2J3MzAwNWJuMnpvYXl6M2toZmd2In0.MPVbzanjlna7F3SyHtfc_A';
+
+// user-supplied pin icon (16x16 viewBox, tip at 8,16), recolored via fillStyle at draw time
+const PIN_SVG_PATH = new Path2D('M3.37892 10.2236L8 16L12.6211 10.2236C13.5137 9.10788 14 7.72154 14 6.29266V6C14 2.68629 11.3137 0 8 0C4.68629 0 2 2.68629 2 6V6.29266C2 7.72154 2.4863 9.10788 3.37892 10.2236ZM8 8C9.10457 8 10 7.10457 10 6C10 4.89543 9.10457 4 8 4C6.89543 4 6 4.89543 6 6C6 7.10457 6.89543 8 8 8Z');
+
+function loadTile(z, x, y, style){
+  return new Promise((resolve) => {
+    const tilesPerRow = Math.pow(2, z);
+    const wrappedX = ((x % tilesPerRow) + tilesPerRow) % tilesPerRow;
+    if(y < 0 || y >= tilesPerRow){ resolve(null); return; }
+    const token = MAPBOX_TOKEN.trim();
+    if(!token){ resolve(null); return; }
+    const styleId = style === 'satelit' ? 'satellite-streets-v12' : 'streets-v12';
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = `https://api.mapbox.com/styles/v1/mapbox/${styleId}/tiles/256/${z}/${wrappedX}/${y}?access_token=${encodeURIComponent(token)}`;
+  });
+}
+
+async function buildMapThumbnail(lat, lon, size, zoom, style){
+  const map = document.createElement('canvas');
+  map.width = size;
+  map.height = size;
+  const ctx = map.getContext('2d');
+  ctx.fillStyle = '#E5E5EA';
+  ctx.fillRect(0, 0, size, size);
+
+  const { x: px, y: py } = project(lat, lon, zoom);
+  const originX = px - size / 2;
+  const originY = py - size / 2;
+  const firstTileX = Math.floor(originX / 256);
+  const firstTileY = Math.floor(originY / 256);
+  const lastTileX = Math.floor((originX + size) / 256);
+  const lastTileY = Math.floor((originY + size) / 256);
+
+  let anyLoaded = false;
+  const jobs = [];
+  for(let tx = firstTileX; tx <= lastTileX; tx++){
+    for(let ty = firstTileY; ty <= lastTileY; ty++){
+      jobs.push(
+        loadTile(zoom, tx, ty, style).then((img) => {
+          if(img){
+            anyLoaded = true;
+            ctx.drawImage(img, tx * 256 - originX, ty * 256 - originY, 256, 256);
+          }
+        })
+      );
+    }
+  }
+  await Promise.all(jobs);
+
+  // draw the uploaded pin SVG, scaled so its tip (at 8,16 in the 16x16 viewBox) sits exactly on the coordinate
+  const tipX = size / 2, tipY = size / 2;
+  const pinPixelHeight = size * 0.22;
+  const scale = pinPixelHeight / 16;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur = size * 0.02;
+  ctx.shadowOffsetY = size * 0.006;
+  ctx.translate(tipX - 8 * scale, tipY - 16 * scale);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#FF3B30';
+  ctx.fill(PIN_SVG_PATH, 'evenodd');
+  ctx.restore();
+
+  return { canvas: map, ok: anyLoaded };
+}
+
+generateBtn.addEventListener('click', async () => {
+  const tanggal = document.getElementById('tanggal').value;
+  const waktu = document.getElementById('waktu').value;
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lng = parseFloat(document.getElementById('lng').value);
+
+  if(!uploadedImg){ setStatus('Pilih foto dulu.', true); return; }
+  if(isNaN(lat) || isNaN(lng)){ setStatus('Isi latitude dan longitude.', true); return; }
+
+  generateBtn.disabled = true;
+  setStatus('Membuat gambar...');
+
+  // work out target canvas size from the chosen ratio, capped so it stays fast
+  const ratioMap = { 'original': uploadedImg.width / uploadedImg.height, '1:1': 1, '4:3': 4/3, '3:4': 3/4, '16:9': 16/9, '9:16': 9/16 };
+  const ratio = ratioMap[selectedRatio] || (uploadedImg.width / uploadedImg.height);
+  const maxSide = 1400;
+  let W, H;
+  if(ratio >= 1){ W = maxSide; H = Math.round(W / ratio); }
+  else { H = maxSide; W = Math.round(H * ratio); }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // cover-fit crop using the same pan/zoom the user set in the preview
+  const geom = computeGeom(W, H, uploadedImg.width, uploadedImg.height, cropZoom);
+  const drawX = (W - geom.drawW) / 2 + panFracX * geom.maxPanX;
+  const drawY = (H - geom.drawH) / 2 + panFracY * geom.maxPanY;
+  ctx.drawImage(uploadedImg, drawX, drawY, geom.drawW, geom.drawH);
+
+  // scale off the smaller side, so narrow/portrait ratios shrink the map and text together instead of overlapping
+  const minSide = Math.min(W, H);
+  const mapSize = Math.round(minSide * 0.3);
+  let mapResult = { ok: false };
+  try{
+    mapResult = await buildMapThumbnail(lat, lng, mapSize, 16, selectedMapStyle);
+  }catch(e){ mapResult = { ok: false }; }
+
+  const mapX = 0;
+  const mapY = H - mapSize;
+
+  if(mapResult.ok){
+    ctx.drawImage(mapResult.canvas, mapX, mapY, mapSize, mapSize);
+  }
+
+  const pad = Math.round(W * 0.02);
+  const textRight = W - pad;
+  const baseFont = Math.max(18, Math.round(minSide * 0.05));
+
+  const coordLine = `${formatCoordPart(lat, 'N', 'S')} ${formatCoordPart(lng, 'E', 'W')}`;
+  const jalan = document.getElementById('jalan').value.trim();
+  const desa = document.getElementById('desa').value.trim();
+  const kecamatan = document.getElementById('kecamatan').value.trim();
+  const kota = document.getElementById('kota').value.trim();
+  const provinsi = document.getElementById('provinsi').value.trim();
+  const kodepos = document.getElementById('kodepos').value.trim();
+
+  const lineSize = Math.round(baseFont * 0.7);
+  const lines = [];
+  if(tanggal && waktu){
+    const [yy, mm, dd] = tanggal.split('-');
+    lines.push({ text: `${dd}/${mm}/${yy}  ${waktu}`, size: lineSize, weight: 600, opacity: 1 });
+  }
+  lines.push({ text: coordLine, size: lineSize, weight: 600, opacity: 1 });
+  if(jalan) lines.push({ text: jalan, size: lineSize, weight: 600, opacity: 1 });
+  if(desa) lines.push({ text: desa, size: lineSize, weight: 600, opacity: 1 });
+  if(kecamatan) lines.push({ text: `Kec. ${kecamatan}`, size: lineSize, weight: 600, opacity: 1 });
+  if(kota) lines.push({ text: `Kabupaten ${kota}`, size: lineSize, weight: 600, opacity: 1 });
+  const lastLine = [provinsi, kodepos].filter(Boolean).join(' ');
+  if(lastLine) lines.push({ text: lastLine, size: lineSize, weight: 600, opacity: 1 });
+
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'alphabetic';
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur = Math.round(baseFont * 0.18);
+  ctx.shadowOffsetY = 1;
+
+  const lineGaps = lines.map((l) => l.size * 1.05);
+  const totalHeight = lineGaps.reduce((a, b) => a + b, 0);
+  const blockBottom = H - pad;
+  let textY = blockBottom - totalHeight + lineGaps[0] * 0.8;
+
+  lines.forEach((l, i) => {
+    ctx.font = `${l.weight} ${l.size}px -apple-system, "SF Pro Text", "Segoe UI", sans-serif`;
+    ctx.fillStyle = `rgba(255,255,255,${l.opacity})`;
+    ctx.fillText(l.text, textRight, textY);
+    textY += lineGaps[i];
+  });
+
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.textAlign = 'left';
+  ctx.font = `400 ${Math.round(baseFont * 0.3)}px -apple-system, "SF Pro Text", sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillText('\u00A9 Mapbox \u00A9 OpenStreetMap', 10, H - 8);
+
+  finalCanvas = canvas;
+  canvasFrame.innerHTML = '';
+  canvasFrame.appendChild(canvas);
+  downloadBtn.disabled = false;
+  generateBtn.disabled = false;
+  setStatus(mapResult.ok ? 'Selesai.' : 'Selesai (cuplikan peta gagal dimuat, gambar tetap dibuat).', !mapResult.ok);
+});
+
+downloadBtn.addEventListener('click', () => {
+  if(!finalCanvas) return;
+  try{
+    const link = document.createElement('a');
+    link.download = 'geotag-photo.jpg';
+    link.href = finalCanvas.toDataURL('image/jpeg', 0.92);
+    link.click();
+  }catch(e){
+    setStatus('Gagal mengunduh: browser memblokir ekspor karena gambar peta lintas-domain.', true);
+  }
+});
+</script>
+</body>
+</html>
