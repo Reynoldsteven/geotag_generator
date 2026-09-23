@@ -911,7 +911,7 @@ generateBtn.addEventListener('click', async () => {
     }catch(e){ mapResult = { ok: false }; }
 
     // bar background
-    ctx.fillStyle = '#E9E9EE';
+    ctx.fillStyle = '#818181';
     ctx.fillRect(0, barY, W, infoBarHeight);
 
     if(mapResult.ok){
@@ -946,18 +946,20 @@ generateBtn.addEventListener('click', async () => {
 
     ctx.textBaseline = 'middle';
     ctx.font = `600 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
-    ctx.fillStyle = '#3A3A3C';
+    ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
     ctx.fillText('Decimal', tableX + colLabelW + colDataW / 2, barY + rowH / 2);
     ctx.fillText('DMS', tableX + colLabelW + colDataW + colDataW / 2, barY + rowH / 2);
 
     ctx.font = `600 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
     ctx.textAlign = 'left';
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillText('Latitude', tableX + colLabelW * 0.08, barY + rowH * 1.5);
     ctx.fillText('Longitude', tableX + colLabelW * 0.08, barY + rowH * 2.5);
 
     ctx.font = `500 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
     ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillText(lat.toFixed(5), tableX + colLabelW + colDataW / 2, barY + rowH * 1.5);
     ctx.fillText(lng.toFixed(5), tableX + colLabelW + colDataW / 2, barY + rowH * 2.5);
     ctx.fillText(toDMS(lat), tableX + colLabelW + colDataW + colDataW / 2, barY + rowH * 1.5);
@@ -965,7 +967,7 @@ generateBtn.addEventListener('click', async () => {
 
     ctx.textAlign = 'left';
     ctx.font = `400 ${Math.round(cellFont * 0.55)}px -apple-system, "SF Pro Text", sans-serif`;
-    ctx.fillStyle = 'rgba(58,58,60,0.6)';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.fillText('\u00A9 Mapbox \u00A9 OpenStreetMap', 6, barY + infoBarHeight - 8);
   } else {
     // scale off the smaller side, so narrow/portrait ratios shrink the map and text together instead of overlapping
