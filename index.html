@@ -882,7 +882,7 @@ generateBtn.addEventListener('click', async () => {
 
   const canvas = document.createElement('canvas');
   canvas.width = W;
-  const infoBarHeight = selectedInfoStyle === 'tabel' ? Math.round(W * 0.18) : 0;
+  const infoBarHeight = selectedInfoStyle === 'tabel' ? Math.round(W * 0.26) : 0;
   canvas.height = H + infoBarHeight;
   const ctx = canvas.getContext('2d');
 
@@ -924,7 +924,7 @@ generateBtn.addEventListener('click', async () => {
     const colLabelW = tableW * 0.32;
     const colDataW = (tableW - colLabelW) / 2;
     const rowH = infoBarHeight / 3;
-    const cellFont = Math.max(11, Math.round(infoBarHeight * 0.13));
+    const cellFont = Math.max(11, Math.round(infoBarHeight * 0.15));
 
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = Math.max(1, infoBarHeight * 0.01);
