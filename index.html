@@ -412,6 +412,12 @@
       <div class="file-drop" id="dropZone">Klik untuk pilih foto</div>
       <input type="file" id="foto" accept="image/*">
 
+      <label>Gaya informasi</label>
+      <div class="ratio-group" id="infoStyleGroup" style="grid-template-columns:1fr 1fr;">
+        <div class="ratio-opt active" data-infostyle="overlay">Di atas foto</div>
+        <div class="ratio-opt" data-infostyle="tabel">Tabel di bawah</div>
+      </div>
+
       <label>Gaya peta</label>
       <div class="ratio-group" id="mapStyleGroup" style="grid-template-columns:1fr 1fr;">
         <div class="ratio-opt active" data-style="jalan">Jalan</div>
@@ -554,6 +560,16 @@ mapStyleGroup.querySelectorAll('.ratio-opt').forEach((btn) => {
     mapStyleGroup.querySelectorAll('.ratio-opt').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     selectedMapStyle = btn.dataset.style;
+  });
+});
+
+const infoStyleGroup = document.getElementById('infoStyleGroup');
+let selectedInfoStyle = 'overlay';
+infoStyleGroup.querySelectorAll('.ratio-opt').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    infoStyleGroup.querySelectorAll('.ratio-opt').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedInfoStyle = btn.dataset.infostyle;
   });
 });
 
@@ -749,6 +765,17 @@ function formatCoordPart(value, posLetter, negLetter, showDegree){
   return `${Math.abs(value).toFixed(6)}${deg} ${value >= 0 ? posLetter : negLetter}`;
 }
 
+function toDMS(value){
+  const abs = Math.abs(value);
+  let d = Math.floor(abs);
+  let mFloat = (abs - d) * 60;
+  let m = Math.floor(mFloat);
+  let s = Math.round((mFloat - m) * 60);
+  if(s >= 60){ s -= 60; m += 1; }
+  if(m >= 60){ m -= 60; d += 1; }
+  return `${d}\u00B0${m}'${s}"`;
+}
+
 function project(lat, lon, zoom){
   const scale = 256 * Math.pow(2, zoom);
   const x = (lon + 180) / 360 * scale;
@@ -855,7 +882,8 @@ generateBtn.addEventListener('click', async () => {
 
   const canvas = document.createElement('canvas');
   canvas.width = W;
-  canvas.height = H;
+  const infoBarHeight = selectedInfoStyle === 'tabel' ? Math.round(W * 0.18) : 0;
+  canvas.height = H + infoBarHeight;
   const ctx = canvas.getContext('2d');
 
   // cover-fit crop using the same pan/zoom the user set in the preview
@@ -864,26 +892,6 @@ generateBtn.addEventListener('click', async () => {
   const drawY = (H - geom.drawH) / 2 + panFracY * geom.maxPanY;
   ctx.drawImage(uploadedImg, drawX, drawY, geom.drawW, geom.drawH);
 
-  // scale off the smaller side, so narrow/portrait ratios shrink the map and text together instead of overlapping
-  const minSide = Math.min(W, H);
-  const mapSize = Math.round(minSide * 0.3);
-  let mapResult = { ok: false };
-  try{
-    mapResult = await buildMapThumbnail(lat, lng, mapSize, 16, selectedMapStyle);
-  }catch(e){ mapResult = { ok: false }; }
-
-  const mapX = 0;
-  const mapY = H - mapSize;
-
-  if(mapResult.ok){
-    ctx.drawImage(mapResult.canvas, mapX, mapY, mapSize, mapSize);
-  }
-
-  const pad = Math.round(W * 0.02);
-  const textRight = W - pad;
-  const baseFont = Math.max(18, Math.round(minSide * 0.05));
-
-  const coordLine = `${formatCoordPart(lat, 'N', 'S', showDegree)} ${formatCoordPart(lng, 'E', 'W', showDegree)}`;
   const jalan = document.getElementById('jalan').value.trim();
   const desa = document.getElementById('desa').value.trim();
   const kecamatan = document.getElementById('kecamatan').value.trim();
@@ -891,44 +899,133 @@ generateBtn.addEventListener('click', async () => {
   const provinsi = document.getElementById('provinsi').value.trim();
   const kodepos = document.getElementById('kodepos').value.trim();
 
-  const lineSize = Math.round(baseFont * 0.7);
-  const lines = [];
-  if(tanggal && waktu){
-    const [yy, mm, dd] = tanggal.split('-');
-    lines.push({ text: `${dd}/${mm}/${yy}  ${waktu}`, size: lineSize, weight: 600, opacity: 1 });
+  let mapResult = { ok: false };
+  const minSide = Math.min(W, H);
+
+  if(selectedInfoStyle === 'tabel'){
+    // map fills the left side of the info bar, table fills the right side
+    const barY = H;
+    const mapSize = infoBarHeight;
+    try{
+      mapResult = await buildMapThumbnail(lat, lng, mapSize, 16, selectedMapStyle);
+    }catch(e){ mapResult = { ok: false }; }
+
+    // bar background
+    ctx.fillStyle = '#E9E9EE';
+    ctx.fillRect(0, barY, W, infoBarHeight);
+
+    if(mapResult.ok){
+      ctx.drawImage(mapResult.canvas, 0, barY, mapSize, mapSize);
+    }
+
+    // table area to the right of the map
+    const tableX = mapSize;
+    const tableW = W - mapSize;
+    const colLabelW = tableW * 0.32;
+    const colDataW = (tableW - colLabelW) / 2;
+    const rowH = infoBarHeight / 3;
+    const cellFont = Math.max(11, Math.round(infoBarHeight * 0.13));
+
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = Math.max(1, infoBarHeight * 0.01);
+
+    // vertical grid lines
+    [tableX, tableX + colLabelW, tableX + colLabelW + colDataW, W].forEach((x) => {
+      ctx.beginPath();
+      ctx.moveTo(x, barY);
+      ctx.lineTo(x, barY + infoBarHeight);
+      ctx.stroke();
+    });
+    // horizontal grid lines
+    [barY, barY + rowH, barY + rowH * 2, barY + infoBarHeight].forEach((y) => {
+      ctx.beginPath();
+      ctx.moveTo(tableX, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    });
+
+    ctx.textBaseline = 'middle';
+    ctx.font = `600 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
+    ctx.fillStyle = '#3A3A3C';
+    ctx.textAlign = 'center';
+    ctx.fillText('Decimal', tableX + colLabelW + colDataW / 2, barY + rowH / 2);
+    ctx.fillText('DMS', tableX + colLabelW + colDataW + colDataW / 2, barY + rowH / 2);
+
+    ctx.font = `600 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('Latitude', tableX + colLabelW * 0.08, barY + rowH * 1.5);
+    ctx.fillText('Longitude', tableX + colLabelW * 0.08, barY + rowH * 2.5);
+
+    ctx.font = `500 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(lat.toFixed(5), tableX + colLabelW + colDataW / 2, barY + rowH * 1.5);
+    ctx.fillText(lng.toFixed(5), tableX + colLabelW + colDataW / 2, barY + rowH * 2.5);
+    ctx.fillText(toDMS(lat), tableX + colLabelW + colDataW + colDataW / 2, barY + rowH * 1.5);
+    ctx.fillText(toDMS(lng), tableX + colLabelW + colDataW + colDataW / 2, barY + rowH * 2.5);
+
+    ctx.textAlign = 'left';
+    ctx.font = `400 ${Math.round(cellFont * 0.55)}px -apple-system, "SF Pro Text", sans-serif`;
+    ctx.fillStyle = 'rgba(58,58,60,0.6)';
+    ctx.fillText('\u00A9 Mapbox \u00A9 OpenStreetMap', 6, barY + infoBarHeight - 8);
+  } else {
+    // scale off the smaller side, so narrow/portrait ratios shrink the map and text together instead of overlapping
+    const mapSize = Math.round(minSide * 0.3);
+    try{
+      mapResult = await buildMapThumbnail(lat, lng, mapSize, 16, selectedMapStyle);
+    }catch(e){ mapResult = { ok: false }; }
+
+    const mapX = 0;
+    const mapY = H - mapSize;
+
+    if(mapResult.ok){
+      ctx.drawImage(mapResult.canvas, mapX, mapY, mapSize, mapSize);
+    }
+
+    const pad = Math.round(W * 0.02);
+    const textRight = W - pad;
+    const baseFont = Math.max(18, Math.round(minSide * 0.05));
+
+    const coordLine = `${formatCoordPart(lat, 'N', 'S', showDegree)} ${formatCoordPart(lng, 'E', 'W', showDegree)}`;
+
+    const lineSize = Math.round(baseFont * 0.7);
+    const lines = [];
+    if(tanggal && waktu){
+      const [yy, mm, dd] = tanggal.split('-');
+      lines.push({ text: `${dd}/${mm}/${yy}  ${waktu}`, size: lineSize, weight: 600, opacity: 1 });
+    }
+    lines.push({ text: coordLine, size: lineSize, weight: 600, opacity: 1 });
+    if(jalan) lines.push({ text: jalan, size: lineSize, weight: 600, opacity: 1 });
+    if(desa) lines.push({ text: desa, size: lineSize, weight: 600, opacity: 1 });
+    if(kecamatan) lines.push({ text: `Kec. ${kecamatan}`, size: lineSize, weight: 600, opacity: 1 });
+    if(kota) lines.push({ text: `Kabupaten ${kota}`, size: lineSize, weight: 600, opacity: 1 });
+    const lastLine = [provinsi, kodepos].filter(Boolean).join(' ');
+    if(lastLine) lines.push({ text: lastLine, size: lineSize, weight: 600, opacity: 1 });
+
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'alphabetic';
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = Math.round(baseFont * 0.18);
+    ctx.shadowOffsetY = 1;
+
+    const lineGaps = lines.map((l) => l.size * 1.05);
+    const totalHeight = lineGaps.reduce((a, b) => a + b, 0);
+    const blockBottom = H - pad;
+    let textY = blockBottom - totalHeight + lineGaps[0] * 0.8;
+
+    lines.forEach((l, i) => {
+      ctx.font = `${l.weight} ${l.size}px -apple-system, "SF Pro Text", "Segoe UI", sans-serif`;
+      ctx.fillStyle = `rgba(255,255,255,${l.opacity})`;
+      ctx.fillText(l.text, textRight, textY);
+      textY += lineGaps[i];
+    });
+
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
+    ctx.font = `400 ${Math.round(baseFont * 0.3)}px -apple-system, "SF Pro Text", sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText('\u00A9 Mapbox \u00A9 OpenStreetMap', 10, H - 8);
   }
-  lines.push({ text: coordLine, size: lineSize, weight: 600, opacity: 1 });
-  if(jalan) lines.push({ text: jalan, size: lineSize, weight: 600, opacity: 1 });
-  if(desa) lines.push({ text: desa, size: lineSize, weight: 600, opacity: 1 });
-  if(kecamatan) lines.push({ text: `Kec. ${kecamatan}`, size: lineSize, weight: 600, opacity: 1 });
-  if(kota) lines.push({ text: `Kabupaten ${kota}`, size: lineSize, weight: 600, opacity: 1 });
-  const lastLine = [provinsi, kodepos].filter(Boolean).join(' ');
-  if(lastLine) lines.push({ text: lastLine, size: lineSize, weight: 600, opacity: 1 });
-
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'alphabetic';
-  ctx.shadowColor = 'rgba(0,0,0,0.55)';
-  ctx.shadowBlur = Math.round(baseFont * 0.18);
-  ctx.shadowOffsetY = 1;
-
-  const lineGaps = lines.map((l) => l.size * 1.05);
-  const totalHeight = lineGaps.reduce((a, b) => a + b, 0);
-  const blockBottom = H - pad;
-  let textY = blockBottom - totalHeight + lineGaps[0] * 0.8;
-
-  lines.forEach((l, i) => {
-    ctx.font = `${l.weight} ${l.size}px -apple-system, "SF Pro Text", "Segoe UI", sans-serif`;
-    ctx.fillStyle = `rgba(255,255,255,${l.opacity})`;
-    ctx.fillText(l.text, textRight, textY);
-    textY += lineGaps[i];
-  });
-
-  ctx.shadowColor = 'transparent';
-  ctx.shadowBlur = 0;
-  ctx.textAlign = 'left';
-  ctx.font = `400 ${Math.round(baseFont * 0.3)}px -apple-system, "SF Pro Text", sans-serif`;
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillText('\u00A9 Mapbox \u00A9 OpenStreetMap', 10, H - 8);
 
   finalCanvas = canvas;
   canvasFrame.innerHTML = '';
