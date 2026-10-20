@@ -6,532 +6,286 @@
 <title>Geotag Photo</title>
 <style>
   :root{
-    --bg:#F5F5F7;
-    --card:#FFFFFF;
-    --border:#D2D2D7;
-    --text:#1D1D1F;
-    --text-secondary:#6E6E73;
-    --blue:#0071E3;
-    --blue-hover:#0077ED;
-    --blue-press:#006EDB;
-    --red:#FF3B30;
-    --input-bg:#FBFBFD;
-    --hover-bg:#F5F5F7;
+    --bg:#F5F5F7; --card:#FFFFFF; --border:#D2D2D7; --text:#1D1D1F; --text-secondary:#6E6E73;
+    --blue:#0071E3; --blue-hover:#0077ED; --blue-press:#006EDB; --red:#FF3B30;
+    --input-bg:#FBFBFD; --hover-bg:#F0F0F3; --stage-bg:#E9E9ED; --dot:#CFCFD6;
     --shadow:0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
-    --radius-lg:18px;
-    --radius-md:12px;
-    --radius-sm:8px;
+    --radius-lg:16px; --radius-md:10px; --radius-sm:8px;
   }
   :root[data-theme="dark"]{
-    --bg:#000000;
-    --card:#1C1C1E;
-    --border:#38383A;
-    --text:#F5F5F7;
-    --text-secondary:#98989D;
-    --blue:#0A84FF;
-    --blue-hover:#3395FF;
-    --blue-press:#0071E3;
-    --red:#FF453A;
-    --input-bg:#2C2C2E;
-    --hover-bg:#2C2C2E;
+    --bg:#000000; --card:#1C1C1E; --border:#38383A; --text:#F5F5F7; --text-secondary:#98989D;
+    --blue:#0A84FF; --blue-hover:#3395FF; --blue-press:#0071E3; --red:#FF453A;
+    --input-bg:#2C2C2E; --hover-bg:#2C2C2E; --stage-bg:#0E0E10; --dot:#2A2A2E;
     --shadow:0 1px 3px rgba(0,0,0,0.35), 0 8px 24px rgba(0,0,0,0.35);
   }
   *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;overflow:hidden;}
   body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing:antialiased;
-    transition:background-color .25s ease, color .25s ease;
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; transition:background-color .25s ease,color .25s ease;
   }
-  .wrap{
-    max-width:1080px;
-    margin:0 auto;
-    padding:64px 24px 100px;
+  .app{height:100dvh;display:flex;flex-direction:column;}
+  .topbar{
+    flex:none;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;
   }
-  header{
-    text-align:center;
-    margin-bottom:48px;
-    position:relative;
-    animation:fadeSlideIn .5s ease both;
+  .brand{display:flex;align-items:baseline;gap:10px;min-width:0;}
+  .brand h1{font-size:17px;font-weight:600;letter-spacing:-0.01em;margin:0;white-space:nowrap;}
+  .brand span{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .theme-switch{display:inline-flex;cursor:pointer;position:relative;}
+  .theme-switch input{position:absolute;opacity:0;width:0;height:0;}
+  .switch-track{width:50px;height:28px;border-radius:980px;background:var(--input-bg);border:1px solid var(--border);position:relative;display:flex;align-items:center;transition:background-color .25s ease;}
+  .switch-thumb{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:12px;transition:transform .25s cubic-bezier(.4,0,.2,1);}
+  .theme-switch input:checked ~ .switch-track .switch-thumb{transform:translateX(22px);}
+  .theme-switch input:focus-visible ~ .switch-track{outline:2px solid var(--blue);outline-offset:2px;}
+
+  .main{
+    flex:1;min-height:0;display:grid;grid-template-columns:344px minmax(0,1fr);gap:12px;padding:0 12px 12px;
   }
-  @keyframes fadeSlideIn{
-    from{opacity:0; transform:translateY(-8px);}
-    to{opacity:1; transform:translateY(0);}
+  .panel,.stage-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden;transition:background-color .25s ease;}
+  .panel-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;}
+  .panel-foot{flex:none;display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:var(--card);}
+
+  /* sections */
+  .sec{border-bottom:1px solid var(--border);}
+  .sec:last-child{border-bottom:none;}
+  .sec > summary{list-style:none;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;padding:11px 14px;font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--text-secondary);}
+  .sec > summary::-webkit-details-marker{display:none;}
+  .sec > summary .chev{font-size:10px;transition:transform .2s ease;}
+  .sec[open] > summary .chev{transform:rotate(180deg);}
+  .sec-body{padding:0 14px 14px;}
+  .lbl{display:block;font-size:11.5px;font-weight:500;color:var(--text-secondary);margin:10px 0 5px;}
+  .lbl:first-child{margin-top:0;}
+  .lbl small{font-weight:400;opacity:.8;}
+  input[type=date],input[type=time],input[type=number],input[type=text]{
+    width:100%;font-family:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);
+    background:var(--input-bg);color:var(--text);-webkit-appearance:none;transition:border-color .15s ease,box-shadow .15s ease;
   }
-  .theme-switch{
-    position:absolute;
-    top:4px;
-    right:0;
-    display:inline-flex;
-    cursor:pointer;
-  }
-  .theme-switch input{
-    position:absolute;
-    opacity:0;
-    width:0;
-    height:0;
-  }
-  .switch-track{
-    width:56px;
-    height:30px;
-    border-radius:980px;
-    background:var(--input-bg);
-    border:1px solid var(--border);
-    position:relative;
-    display:flex;
-    align-items:center;
-    transition:background-color .25s ease, border-color .25s ease;
-  }
-  .switch-thumb{
-    position:absolute;
-    top:2px;
-    left:2px;
-    width:24px;
-    height:24px;
-    border-radius:50%;
-    background:var(--card);
-    box-shadow:0 1px 3px rgba(0,0,0,0.25);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:13px;
-    transition:transform .25s cubic-bezier(.4,0,.2,1);
-  }
-  .theme-switch input:checked ~ .switch-track .switch-thumb{
-    transform:translateX(26px);
-  }
-  .theme-switch input:focus-visible ~ .switch-track{
-    outline:2px solid var(--blue);
-    outline-offset:2px;
-  }
-  header h1{
-    font-size:clamp(32px,5vw,44px);
-    font-weight:600;
-    letter-spacing:-0.02em;
-    margin:0 0 10px;
-  }
-  header p{
-    font-size:17px;
-    color:var(--text-secondary);
-    margin:0;
-    font-weight:400;
-  }
-  .grid{
-    display:grid;
-    grid-template-columns:380px 1fr;
-    gap:24px;
-    align-items:start;
-  }
-  @media (max-width:860px){
-    .grid{grid-template-columns:1fr;}
-  }
-  .card{
-    background:var(--card);
-    border-radius:var(--radius-lg);
-    padding:32px;
-    box-shadow:var(--shadow);
-    transition:background-color .25s ease, box-shadow .2s ease;
-  }
-  .card h2{
-    font-size:20px;
-    font-weight:600;
-    margin:0 0 4px;
-    letter-spacing:-0.01em;
-  }
-  .card .sub{
-    font-size:13px;
-    color:var(--text-secondary);
-    margin:0 0 24px;
-  }
-  label{
-    display:block;
-    font-size:13px;
-    font-weight:500;
-    color:var(--text);
-    margin-bottom:7px;
-    margin-top:18px;
-  }
-  label:first-of-type{margin-top:0;}
-  input[type=date], input[type=time], input[type=number], input[type=text]{
-    width:100%;
-    font-family:inherit;
-    font-size:15px;
-    padding:11px 13px;
-    border:1px solid var(--border);
-    border-radius:var(--radius-sm);
-    background:var(--input-bg);
-    color:var(--text);
-    -webkit-appearance:none;
-    transition:background-color .25s ease, border-color .15s ease, box-shadow .15s ease;
-  }
-  input:focus{
-    outline:none;
-    border-color:var(--blue);
-    box-shadow:0 0 0 4px rgba(0,113,227,0.12);
-  }
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .file-drop{
-    border:1px dashed var(--border);
-    border-radius:var(--radius-md);
-    padding:22px 16px;
-    text-align:center;
-    cursor:pointer;
-    font-size:13.5px;
-    color:var(--text-secondary);
-    background:var(--input-bg);
-    transition:border-color .15s ease, background-color .2s ease, transform .1s ease;
-  }
-  .file-drop:active{transform:scale(0.99);}
-  .file-drop:hover{border-color:var(--blue);background:#F5FAFF;}
-  .file-drop.dragover{border-color:var(--blue);background:#EAF4FF;border-style:solid;}
-  .file-drop.has-file{color:var(--blue);border-color:var(--blue);border-style:solid;background:#F5FAFF;}
+  input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,113,227,.14);}
+  input[type=color]{width:100%;height:30px;padding:2px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--input-bg);cursor:pointer;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .seg{display:grid;gap:4px;padding:3px;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-sm);}
+  .seg button{border:none;background:transparent;color:var(--text-secondary);font-family:inherit;font-size:12px;font-weight:500;padding:6px 4px;border-radius:6px;cursor:pointer;transition:background-color .15s ease,color .15s ease;}
+  .seg button:hover{color:var(--text);}
+  .seg button.active{background:var(--blue);color:#fff;}
+  .chips{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;}
+  .chips.c3{grid-template-columns:repeat(3,1fr);}
+  .chips button{border:1px solid var(--border);background:var(--input-bg);color:var(--text-secondary);font-family:inherit;font-size:11.5px;font-weight:500;padding:6px 2px;border-radius:6px;cursor:pointer;transition:all .15s ease;}
+  .chips button:hover{border-color:var(--text-secondary);}
+  .chips button.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .file-drop{border:1px dashed var(--border);border-radius:var(--radius-md);padding:12px;text-align:center;cursor:pointer;font-size:12.5px;color:var(--text-secondary);background:var(--input-bg);transition:border-color .15s ease,background-color .2s ease;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .file-drop:hover,.file-drop.dragover{border-color:var(--blue);}
+  .file-drop.has-file{color:var(--blue);border-style:solid;}
   input[type=file]{display:none;}
-  .ghost-btn{
-    margin-top:10px;
-    width:100%;
-    background:var(--card);
-    border:1px solid var(--border);
-    color:var(--text);
-    font-family:inherit;
-    font-size:13.5px;
-    font-weight:500;
-    padding:11px;
-    border-radius:var(--radius-sm);
-    cursor:pointer;
-    transition:background-color .2s ease, border-color .15s ease, transform .1s ease;
+  .ghost-btn{background:var(--card);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:12.5px;font-weight:500;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:background-color .15s ease,transform .1s ease;}
+  .ghost-btn:hover:not(:disabled){background:var(--hover-bg);}
+  .ghost-btn:active:not(:disabled){transform:scale(.98);}
+  .ghost-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+  .btn-row.one{grid-template-columns:1fr;}
+  .primary-btn{flex:1.4;background:var(--blue);color:#fff;border:none;font-family:inherit;font-weight:600;font-size:13.5px;padding:10px;border-radius:980px;cursor:pointer;transition:background .15s ease,transform .1s ease;}
+  .primary-btn:hover:not(:disabled){background:var(--blue-hover);}
+  .primary-btn:active:not(:disabled){background:var(--blue-press);transform:scale(.98);}
+  .primary-btn:disabled{background:var(--text-secondary);opacity:.5;cursor:not-allowed;}
+  .panel-foot .ghost-btn{flex:1;border-radius:980px;}
+  .checkbox-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;}
+  .checkbox-row input{width:15px;height:15px;accent-color:var(--blue);margin:0;}
+
+  /* sliders */
+  .slider-row{display:grid;grid-template-columns:92px 1fr 40px 22px;align-items:center;gap:6px;margin-top:8px;}
+  .slider-row:first-child{margin-top:0;}
+  .slider-row .n{font-size:12px;color:var(--text);}
+  .slider-row .v{font-size:11.5px;color:var(--text-secondary);text-align:right;font-variant-numeric:tabular-nums;}
+  .slider-row input[type=range]{width:100%;accent-color:var(--blue);margin:0;}
+  .slider-row .rs{border:none;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:13px;padding:0;line-height:1;}
+  .slider-row .rs:hover{color:var(--blue);}
+  .hint{font-size:11.5px;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;}
+  .only-manual{display:none;}
+  [data-mode="manual"] .only-manual{display:block;}
+  [data-mode="manual"] .only-auto{display:none;}
+
+  /* stage */
+  .stage-toolbar{flex:none;display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);}
+  .tb-btn{min-width:30px;height:30px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;padding:0 8px;transition:background-color .15s ease;}
+  .tb-btn:hover:not(:disabled){background:var(--hover-bg);}
+  .tb-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .tb-zoom{min-width:56px;font-size:12px;font-variant-numeric:tabular-nums;}
+  .tb-spacer{flex:1;}
+  #status{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46%;text-align:right;}
+  #status.err{color:var(--red);}
+  .stage{
+    flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;
+    background-color:var(--stage-bg);
+    background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:18px 18px;
   }
-  .ghost-btn:hover{background:var(--hover-bg);border-color:var(--text-secondary);}
-  .ghost-btn:active{transform:scale(0.98);}
-  .primary-btn{
-    margin-top:28px;
-    width:100%;
-    background:var(--blue);
-    color:#fff;
-    border:none;
-    font-family:inherit;
-    font-weight:600;
-    font-size:15px;
-    padding:14px;
-    border-radius:980px;
-    cursor:pointer;
-    transition:background .15s ease, transform .1s ease;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-  }
-  .primary-btn:hover{background:var(--blue-hover);}
-  .primary-btn:active{background:var(--blue-press);transform:scale(0.98);}
-  .primary-btn:disabled{background:var(--text-secondary);cursor:not-allowed;transform:none;}
-  .spinner{
-    width:15px;
-    height:15px;
-    border-radius:50%;
-    border:2px solid rgba(255,255,255,0.4);
-    border-top-color:#fff;
-    animation:spin .7s linear infinite;
-    display:none;
-  }
-  .primary-btn.loading .spinner{display:inline-block;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .status{
-    margin-top:12px;
-    font-size:12.5px;
-    color:var(--text-secondary);
-    min-height:16px;
-    text-align:center;
-  }
-  .status.err{color:var(--red);}
-  .preview-side{
-    display:flex;
-    flex-direction:column;
-    gap:16px;
-  }
-  .canvas-frame{
-    background:var(--card);
-    border-radius:var(--radius-lg);
-    box-shadow:var(--shadow);
-    padding:20px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height:380px;
-    transition:background-color .25s ease;
-  }
-  .canvas-frame canvas{
-    max-width:100%;
-    max-height:660px;
-    border-radius:var(--radius-md);
-    display:block;
-    animation:fadeSlideIn .35s ease both;
-  }
-  .canvas-frame .empty{
-    color:var(--text-secondary);
-    opacity:0.6;
-    font-size:14px;
-    text-align:center;
-    line-height:1.6;
-  }
-  .secondary-btn{
-    align-self:flex-start;
-    background:var(--card);
-    border:1px solid var(--border);
-    color:var(--text);
-    font-family:inherit;
-    font-weight:500;
-    font-size:14px;
-    padding:11px 22px;
-    border-radius:980px;
-    cursor:pointer;
-    transition:background-color .2s ease, transform .1s ease;
-  }
-  .secondary-btn:hover:not(:disabled){background:var(--hover-bg);}
-  .secondary-btn:active:not(:disabled){transform:scale(0.98);}
-  .secondary-btn:disabled{opacity:0.35;cursor:not-allowed;}
-  .note{
-    font-size:12px;
-    color:var(--text-secondary);
-    line-height:1.6;
-    max-width:540px;
-    padding:0 4px;
-  }
-  .ratio-group{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:8px;
-  }
-  .ratio-opt{
-    padding:9px 4px;
-    font-size:12.5px;
-    font-weight:500;
-    text-align:center;
-    border:1px solid var(--border);
-    border-radius:var(--radius-sm);
-    background:var(--input-bg);
-    color:var(--text-secondary);
-    cursor:pointer;
-    transition:background-color .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
-  }
-  .ratio-opt:hover{border-color:var(--text-secondary);}
-  .ratio-opt:active{transform:scale(0.96);}
-  .ratio-opt.active{
-    background:var(--blue);
-    border-color:var(--blue);
-    color:#fff;
-  }
-  .crop-preview-wrap{
-    margin-top:18px;
-  }
-  #cropCanvas{
-    display:block;
-    max-width:100%;
-    border-radius:var(--radius-md);
-    background:var(--input-bg);
-    cursor:grab;
-    touch-action:none;
-    box-shadow:0 0 0 1px var(--border);
-  }
-  #cropCanvas:active{cursor:grabbing;}
-  .crop-hint{
-    font-size:11px;
-    color:var(--text-secondary);
-    text-align:center;
-    margin:8px 0 6px;
-  }
-  #zoomSlider{
-    width:100%;
-    accent-color:var(--blue);
-  }
-  .addr-details{
-    margin-top:20px;
-    border-top:1px solid var(--border);
-    padding-top:4px;
-  }
-  .addr-details summary{
-    list-style:none;
-    cursor:pointer;
-    padding:12px 0 4px;
-    font-size:13px;
-    font-weight:500;
-    color:var(--text);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    user-select:none;
-  }
-  .addr-details summary::-webkit-details-marker{display:none;}
-  .addr-details summary .chevron{
-    transition:transform .2s ease;
-    color:var(--text-secondary);
-    font-size:11px;
-  }
-  .addr-details[open] summary .chevron{transform:rotate(180deg);}
-  .addr-details .addr-body{
-    animation:fadeSlideIn .2s ease both;
-  }
-  .addr-body label:first-of-type{margin-top:18px;}
-  .checkbox-row{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-top:16px;
-  }
-  .checkbox-row input[type=checkbox]{
-    width:16px;
-    height:16px;
-    accent-color:var(--blue);
-    margin:0;
-  }
-  .checkbox-row label{
-    margin:0;
-    font-size:13px;
-    font-weight:400;
-    color:var(--text);
+  #view{position:absolute;left:0;top:0;transform-origin:0 0;display:none;box-shadow:0 2px 16px rgba(0,0,0,.28);will-change:transform;}
+  .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;color:var(--text-secondary);font-size:13.5px;line-height:1.6;padding:24px;}
+  .empty .ghost-btn{font-size:13px;padding:9px 18px;border-radius:980px;}
+  .stage.dragover{outline:2px dashed var(--blue);outline-offset:-8px;}
+  .note{position:absolute;left:10px;bottom:8px;font-size:11px;color:var(--text-secondary);opacity:.8;pointer-events:none;}
+
+  @media (max-width:860px){
+    .brand span{display:none;}
+    .main{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);}
+    .stage-card{order:-1;}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <label class="theme-switch">
+<div class="app" id="app" data-mode="auto">
+  <div class="topbar">
+    <div class="brand"><h1>Geotag Photo</h1><span>Koordinat, alamat, dan peta di atas fotomu</span></div>
+    <label class="theme-switch" title="Ganti tema">
       <input type="checkbox" id="themeToggleInput">
       <span class="switch-track"><span class="switch-thumb" id="switchThumb">☀️</span></span>
     </label>
-    <h1>Geotag Photo</h1>
-    <p>Tempelkan koordinat, alamat, dan cuplikan peta ke fotomu — lengkap dengan pilihan rasio.</p>
-  </header>
+  </div>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Data lokasi</h2>
-      <p class="sub">Isi semua kolom, lalu buat gambarnya.</p>
-
-      <label for="foto">Foto</label>
-      <div class="file-drop" id="dropZone">Klik untuk pilih foto</div>
-      <input type="file" id="foto" accept="image/*">
-
-      <label>Gaya informasi</label>
-      <div class="ratio-group" id="infoStyleGroup" style="grid-template-columns:1fr 1fr;">
-        <div class="ratio-opt active" data-infostyle="overlay">Di atas foto</div>
-        <div class="ratio-opt" data-infostyle="tabel">Tabel di bawah</div>
-      </div>
-
-      <label>Gaya peta</label>
-      <div class="ratio-group" id="mapStyleGroup" style="grid-template-columns:1fr 1fr;">
-        <div class="ratio-opt active" data-style="jalan">Jalan</div>
-        <div class="ratio-opt" data-style="satelit">Satelit</div>
-      </div>
-
-      <label>Rasio foto</label>
-      <div class="ratio-group" id="ratioGroup">
-        <div class="ratio-opt active" data-ratio="original">Asli</div>
-        <div class="ratio-opt" data-ratio="4:3">4:3</div>
-        <div class="ratio-opt" data-ratio="3:4">3:4</div>
-        <div class="ratio-opt" data-ratio="1:1">1:1</div>
-        <div class="ratio-opt" data-ratio="16:9">16:9</div>
-        <div class="ratio-opt" data-ratio="9:16">9:16</div>
-      </div>
-
-      <div class="crop-preview-wrap" id="cropPreviewWrap" style="display:none;">
-        <canvas id="cropCanvas"></canvas>
-        <div class="crop-hint">Geser foto untuk atur posisi</div>
-        <input type="range" id="zoomSlider" min="1" max="2.5" step="0.01" value="1">
-      </div>
-
-      <div class="row2">
-        <div>
-          <label for="tanggal">Tanggal <span style="font-weight:400;color:var(--text-secondary)">(opsional)</span></label>
-          <input type="date" id="tanggal">
-        </div>
-        <div>
-          <label for="waktu">Waktu <span style="font-weight:400;color:var(--text-secondary)">(opsional)</span></label>
-          <input type="time" id="waktu">
-        </div>
-      </div>
-
-      <div class="row2">
-        <div>
-          <label for="lat">Latitude</label>
-          <input type="number" id="lat" step="any" placeholder="-6.200000">
-        </div>
-        <div>
-          <label for="lng">Longitude</label>
-          <input type="number" id="lng" step="any" placeholder="106.816666">
-        </div>
-      </div>
-
-      <div class="checkbox-row">
-        <input type="checkbox" id="showDegree" checked>
-        <label for="showDegree">Tampilkan simbol derajat (°) di koordinat</label>
-      </div>
-
-      <button class="ghost-btn" id="locateBtn">Pakai lokasi saya sekarang</button>
-      <button class="ghost-btn" id="geocodeBtn">Isi alamat otomatis dari koordinat</button>
-
-      <details class="addr-details" open>
-        <summary>Detail alamat <span class="chevron">▾</span></summary>
-        <div class="addr-body">
-          <label for="jalan">Jalan</label>
-          <input type="text" id="jalan" placeholder="Jl. Contoh No. 1">
-
-          <label for="desa">Desa/Kelurahan</label>
-          <input type="text" id="desa" placeholder="Desa/Kelurahan">
-
-          <div class="row2">
-            <div>
-              <label for="kecamatan">Kecamatan</label>
-              <input type="text" id="kecamatan" placeholder="Kecamatan">
+  <div class="main">
+    <!-- PANEL KIRI -->
+    <aside class="panel">
+      <div class="panel-scroll">
+        <details class="sec" open>
+          <summary>Foto <span class="chev">▾</span></summary>
+          <div class="sec-body">
+            <div class="file-drop" id="dropZone">Klik atau drop foto di sini</div>
+            <input type="file" id="foto" accept="image/*">
+            <span class="lbl">Rasio foto</span>
+            <div class="chips" id="ratioGroup">
+              <button class="active" data-ratio="original">Asli</button>
+              <button data-ratio="4:3">4:3</button>
+              <button data-ratio="3:4">3:4</button>
+              <button data-ratio="1:1">1:1</button>
+              <button data-ratio="16:9">16:9</button>
+              <button data-ratio="9:16">9:16</button>
             </div>
-            <div>
-              <label for="kota">Kabupaten/Kota</label>
-              <input type="text" id="kota" placeholder="Kabupaten/Kota">
+            <div class="row2">
+              <div><span class="lbl">Warna latar foto</span><input type="color" id="bgColor" value="#000000"></div>
+              <div><span class="lbl">Gaya peta</span>
+                <div class="seg" id="mapStyleGroup" style="grid-template-columns:1fr 1fr">
+                  <button class="active" data-style="jalan">Jalan</button>
+                  <button data-style="satelit">Satelit</button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="row2">
-            <div>
-              <label for="provinsi">Provinsi</label>
-              <input type="text" id="provinsi" placeholder="Provinsi">
+        </details>
+
+        <details class="sec" open>
+          <summary>Mode edit <span class="chev">▾</span></summary>
+          <div class="sec-body">
+            <div class="seg" id="modeGroup" style="grid-template-columns:1fr 1fr">
+              <button class="active" data-mode="auto">Otomatis</button>
+              <button data-mode="manual">Manual</button>
             </div>
-            <div>
-              <label for="kodepos">Kode Pos</label>
-              <input type="text" id="kodepos" placeholder="29255">
+            <div class="only-auto">
+              <span class="lbl">Gaya informasi</span>
+              <div class="seg" id="infoStyleGroup" style="grid-template-columns:1fr 1fr">
+                <button class="active" data-infostyle="overlay">Di atas foto</button>
+                <button data-infostyle="tabel">Tabel di bawah</button>
+              </div>
+              <p class="hint" style="margin:8px 0 0">Layout bawaan tersusun otomatis. Seret foto di preview untuk mengatur posisi crop.</p>
+            </div>
+            <div class="only-manual">
+              <span class="lbl">Elemen terpilih <small>(klik di preview atau pilih di sini)</small></span>
+              <div class="chips c3" id="elChips">
+                <button data-el="photo">Foto</button>
+                <button data-el="map">Peta</button>
+                <button data-el="date">Tanggal</button>
+                <button data-el="time">Waktu</button>
+                <button data-el="coord">Koordinat</button>
+                <button data-el="lokasi">Lokasi</button>
+              </div>
+              <div class="btn-row">
+                <button class="ghost-btn" id="resetElBtn" disabled>Reset elemen</button>
+                <button class="ghost-btn" id="deselBtn" disabled>Batal pilih</button>
+              </div>
+              <p class="hint" style="margin:8px 0 0">Seret elemen untuk memindahkan. Panah keyboard menggeser 1 px (Shift = 10 px).</p>
             </div>
           </div>
-        </div>
-      </details>
+        </details>
 
-      <button class="primary-btn" id="generateBtn"><span class="spinner"></span><span id="generateBtnText">Buat gambar</span></button>
-      <div class="status" id="status"></div>
-    </div>
+        <details class="sec" open>
+          <summary>Tampilan <span class="chev">▾</span></summary>
+          <div class="sec-body" id="sliderBody"></div>
+        </details>
 
-    <div class="preview-side">
-      <div class="canvas-frame" id="canvasFrame">
-        <div class="empty">Hasil akan muncul di sini<br>setelah data diisi dan gambar dibuat</div>
+        <details class="sec" open>
+          <summary>Lokasi &amp; waktu <span class="chev">▾</span></summary>
+          <div class="sec-body">
+            <div class="row2">
+              <div><span class="lbl">Tanggal <small>(opsional)</small></span><input type="date" id="tanggal" class="rr"></div>
+              <div><span class="lbl">Waktu <small>(opsional)</small></span><input type="time" id="waktu" step="1" class="rr"></div>
+            </div>
+            <div class="btn-row one"><button class="ghost-btn" id="nowBtn">Isi tanggal &amp; waktu sekarang</button></div>
+            <div class="row2">
+              <div><span class="lbl">Latitude</span><input type="number" id="lat" step="any" placeholder="-6.200000" class="rr"></div>
+              <div><span class="lbl">Longitude</span><input type="number" id="lng" step="any" placeholder="106.816666" class="rr"></div>
+            </div>
+            <div class="checkbox-row"><input type="checkbox" id="showDegree" class="rr" checked><label for="showDegree">Tampilkan simbol derajat (°)</label></div>
+            <div class="btn-row">
+              <button class="ghost-btn" id="locateBtn">Lokasi saya</button>
+              <button class="ghost-btn" id="geocodeBtn">Isi alamat</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="sec">
+          <summary>Detail alamat <span class="chev">▾</span></summary>
+          <div class="sec-body">
+            <span class="lbl">Jalan</span><input type="text" id="jalan" placeholder="Jl. Contoh No. 1" class="rr">
+            <span class="lbl">Desa/Kelurahan</span><input type="text" id="desa" placeholder="Desa/Kelurahan" class="rr">
+            <div class="row2">
+              <div><span class="lbl">Kecamatan</span><input type="text" id="kecamatan" placeholder="Kecamatan" class="rr"></div>
+              <div><span class="lbl">Kabupaten/Kota</span><input type="text" id="kota" placeholder="Kab./Kota" class="rr"></div>
+            </div>
+            <div class="row2">
+              <div><span class="lbl">Provinsi</span><input type="text" id="provinsi" placeholder="Provinsi" class="rr"></div>
+              <div><span class="lbl">Kode Pos</span><input type="text" id="kodepos" placeholder="29255" class="rr"></div>
+            </div>
+          </div>
+        </details>
       </div>
-      <button class="secondary-btn" id="downloadBtn" disabled>Unduh gambar</button>
-      <p class="note">Peta memakai Mapbox, Made By Reynold</p>
-    </div>
+      <div class="panel-foot">
+        <button class="ghost-btn" id="resetBtn" disabled>Reset</button>
+        <button class="primary-btn" id="downloadBtn" disabled>Unduh JPG</button>
+      </div>
+    </aside>
+
+    <!-- AREA PREVIEW -->
+    <section class="stage-card">
+      <div class="stage-toolbar">
+        <button class="tb-btn" id="zoomOut" title="Perkecil" disabled>−</button>
+        <button class="tb-btn tb-zoom" id="zoomLabel" title="Kembali ke 100%" disabled>100%</button>
+        <button class="tb-btn" id="zoomIn" title="Perbesar" disabled>+</button>
+        <button class="tb-btn" id="zoomFit" title="Sesuaikan ke area" disabled>Pas</button>
+        <span class="tb-spacer"></span>
+        <span id="status"></span>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="view"></canvas>
+        <div class="empty" id="empty">
+          <div>Unggah foto untuk melihat pratinjau geotag.<br>Foto bisa juga di-drop ke area ini.</div>
+          <button class="ghost-btn" id="emptyBtn">Pilih foto</button>
+        </div>
+        <div class="note">Peta memakai Mapbox, Made By Reynold · Ctrl/⌘ + scroll untuk zoom, scroll untuk geser</div>
+      </div>
+    </section>
   </div>
 </div>
 
 <script>
-const fotoInput = document.getElementById('foto');
-const dropZone = document.getElementById('dropZone');
-const generateBtn = document.getElementById('generateBtn');
-const downloadBtn = document.getElementById('downloadBtn');
-const statusEl = document.getElementById('status');
-const canvasFrame = document.getElementById('canvasFrame');
-const locateBtn = document.getElementById('locateBtn');
+const $ = (id) => document.getElementById(id);
+const FONT = '-apple-system, "SF Pro Text", "Segoe UI", sans-serif';
+const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-// theme toggle: remembers the user's choice, otherwise follows the system preference
-const themeToggleInput = document.getElementById('themeToggleInput');
-const switchThumb = document.getElementById('switchThumb');
-function applyTheme(theme){
-  document.documentElement.setAttribute('data-theme', theme);
-  switchThumb.textContent = theme === 'dark' ? '🌙' : '☀️';
-  try{ localStorage.setItem('geotag-theme', theme); }catch(e){}
+/* ---------- theme ---------- */
+const themeToggleInput = $('themeToggleInput');
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  $('switchThumb').textContent = t === 'dark' ? '🌙' : '☀️';
+  try{ localStorage.setItem('geotag-theme', t); }catch(e){}
 }
 let savedTheme = null;
 try{ savedTheme = localStorage.getItem('geotag-theme'); }catch(e){}
@@ -540,241 +294,67 @@ const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
 applyTheme(initialTheme);
 themeToggleInput.checked = initialTheme === 'dark';
 themeToggleInput.addEventListener('change', () => applyTheme(themeToggleInput.checked ? 'dark' : 'light'));
-const ratioGroup = document.getElementById('ratioGroup');
-let selectedRatio = 'original';
-ratioGroup.querySelectorAll('.ratio-opt').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    ratioGroup.querySelectorAll('.ratio-opt').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedRatio = btn.dataset.ratio;
-    cropZoom = 1; panFracX = 0; panFracY = 0;
-    zoomSlider.value = 1;
-    drawCropPreview();
-  });
-});
 
-const mapStyleGroup = document.getElementById('mapStyleGroup');
-let selectedMapStyle = 'jalan';
-mapStyleGroup.querySelectorAll('.ratio-opt').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    mapStyleGroup.querySelectorAll('.ratio-opt').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedMapStyle = btn.dataset.style;
-  });
-});
+/* ---------- state ---------- */
+const defEl = () => ({ x: 0, y: 0, s: 1, o: 1 });
+const makeEls = () => ({ photo: defEl(), map: defEl(), date: defEl(), time: defEl(), coord: defEl(), lokasi: defEl() });
+const EL_NAMES = { photo:'Foto', map:'Peta', date:'Tanggal', time:'Waktu', coord:'Koordinat', lokasi:'Lokasi' };
+const S = {
+  img: null, mode: 'auto', infoStyle: 'overlay', mapStyle: 'jalan', ratio: 'original', bg: '#000000',
+  el: makeEls(), autoPan: { x: 0, y: 0 }, sel: null,
+  view: { zoom: 1, x: 0, y: 0, fitted: true }
+};
 
-const infoStyleGroup = document.getElementById('infoStyleGroup');
-let selectedInfoStyle = 'overlay';
-infoStyleGroup.querySelectorAll('.ratio-opt').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    infoStyleGroup.querySelectorAll('.ratio-opt').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedInfoStyle = btn.dataset.infostyle;
-  });
-});
+const viewCanvas = $('view'), vctx = viewCanvas.getContext('2d');
+const stage = $('stage');
+let hits = [];
+let lastDims = '';
 
-let uploadedImg = null;
-let finalCanvas = null;
-
-// crop state: cropZoom is a multiplier over the "cover" fit, panFracX/Y range -1..1
-let cropZoom = 1;
-let panFracX = 0;
-let panFracY = 0;
-const cropCanvas = document.getElementById('cropCanvas');
-const cropPreviewWrap = document.getElementById('cropPreviewWrap');
-const zoomSlider = document.getElementById('zoomSlider');
-const cropCtx = cropCanvas.getContext('2d');
-
-function computeGeom(frameW, frameH, imgW, imgH, zoom){
-  const baseScale = Math.max(frameW / imgW, frameH / imgH);
-  const scale = baseScale * zoom;
-  const drawW = imgW * scale, drawH = imgH * scale;
-  return {
-    scale,
-    drawW,
-    drawH,
-    maxPanX: Math.max(0, (drawW - frameW) / 2),
-    maxPanY: Math.max(0, (drawH - frameH) / 2)
-  };
+/* ---------- format helpers ---------- */
+function fmtDate(v){
+  if(!v) return '';
+  const [y, m, d] = v.split('-');
+  return `${d} ${MONTHS[parseInt(m, 10) - 1]} ${y}`;
 }
-
-function currentRatioValue(){
-  const ratioMap = { 'original': uploadedImg.width / uploadedImg.height, '1:1': 1, '4:3': 4/3, '3:4': 3/4, '16:9': 16/9, '9:16': 9/16 };
-  return ratioMap[selectedRatio] || (uploadedImg.width / uploadedImg.height);
+function fmtTime(v){
+  if(!v) return '';
+  const p = v.split(':');
+  return [p[0], p[1] || '00', (p[2] || '00').slice(0, 2)].map((x) => x.padStart(2, '0')).join(':');
 }
-
-function drawCropPreview(){
-  if(!uploadedImg) return;
-  const ratio = currentRatioValue();
-  const previewMax = 320;
-  let frameW, frameH;
-  if(ratio >= 1){ frameW = previewMax; frameH = Math.round(previewMax / ratio); }
-  else { frameH = previewMax; frameW = Math.round(previewMax * ratio); }
-  cropCanvas.width = frameW;
-  cropCanvas.height = frameH;
-
-  const geom = computeGeom(frameW, frameH, uploadedImg.width, uploadedImg.height, cropZoom);
-  const x = (frameW - geom.drawW) / 2 + panFracX * geom.maxPanX;
-  const y = (frameH - geom.drawH) / 2 + panFracY * geom.maxPanY;
-  cropCtx.clearRect(0, 0, frameW, frameH);
-  cropCtx.drawImage(uploadedImg, x, y, geom.drawW, geom.drawH);
+function formatCoordPart(value, pos, neg, showDegree){
+  return `${Math.abs(value).toFixed(6)}${showDegree ? '\u00B0' : ''} ${value >= 0 ? pos : neg}`;
 }
-
-let dragging = false;
-let dragStartX = 0, dragStartY = 0, dragStartPanX = 0, dragStartPanY = 0;
-
-function pointerDown(clientX, clientY){
-  dragging = true;
-  dragStartX = clientX; dragStartY = clientY;
-  dragStartPanX = panFracX; dragStartPanY = panFracY;
-}
-function pointerMove(clientX, clientY){
-  if(!dragging || !uploadedImg) return;
-  const ratio = currentRatioValue();
-  const frameW = cropCanvas.width, frameH = cropCanvas.height;
-  const geom = computeGeom(frameW, frameH, uploadedImg.width, uploadedImg.height, cropZoom);
-  const dx = clientX - dragStartX, dy = clientY - dragStartY;
-  panFracX = geom.maxPanX > 0 ? Math.max(-1, Math.min(1, dragStartPanX + dx / geom.maxPanX)) : 0;
-  panFracY = geom.maxPanY > 0 ? Math.max(-1, Math.min(1, dragStartPanY + dy / geom.maxPanY)) : 0;
-  drawCropPreview();
-}
-function pointerUp(){ dragging = false; }
-
-cropCanvas.addEventListener('mousedown', (e) => pointerDown(e.clientX, e.clientY));
-window.addEventListener('mousemove', (e) => pointerMove(e.clientX, e.clientY));
-window.addEventListener('mouseup', pointerUp);
-cropCanvas.addEventListener('touchstart', (e) => { const t = e.touches[0]; pointerDown(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
-window.addEventListener('touchmove', (e) => { if(dragging){ const t = e.touches[0]; pointerMove(t.clientX, t.clientY); e.preventDefault(); } }, { passive: false });
-window.addEventListener('touchend', pointerUp);
-
-zoomSlider.addEventListener('input', () => {
-  cropZoom = parseFloat(zoomSlider.value);
-  drawCropPreview();
-});
-
-dropZone.addEventListener('click', () => fotoInput.click());
-fotoInput.addEventListener('change', () => {
-  const file = fotoInput.files[0];
-  if(file) handleFile(file);
-});
-
-['dragenter', 'dragover'].forEach((evt) => {
-  dropZone.addEventListener(evt, (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.add('dragover');
-  });
-});
-['dragleave', 'dragend'].forEach((evt) => {
-  dropZone.addEventListener(evt, (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.remove('dragover');
-  });
-});
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropZone.classList.remove('dragover');
-  const file = e.dataTransfer.files && e.dataTransfer.files[0];
-  if(!file) return;
-  if(!file.type.startsWith('image/')){
-    setStatus('File yang di-drop bukan gambar.', true);
-    return;
-  }
-  fotoInput.files = e.dataTransfer.files;
-  handleFile(file);
-});
-
-function handleFile(file){
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = new Image();
-    img.onload = () => {
-      uploadedImg = img;
-      dropZone.textContent = file.name;
-      dropZone.classList.add('has-file');
-      cropZoom = 1; panFracX = 0; panFracY = 0;
-      zoomSlider.value = 1;
-      cropPreviewWrap.style.display = 'block';
-      drawCropPreview();
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-locateBtn.addEventListener('click', () => {
-  if(!navigator.geolocation){
-    setStatus('Browser ini tidak mendukung geolokasi.', true);
-    return;
-  }
-  setStatus('Mengambil lokasi...');
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
-      document.getElementById('lng').value = pos.coords.longitude.toFixed(6);
-      setStatus('Lokasi berhasil diambil. Mencari alamat...');
-      await fillAddress();
-      setStatus('Lokasi dan alamat berhasil diisi.');
-    },
-    () => setStatus('Gagal mengambil lokasi. Isi manual saja.', true)
-  );
-});
-
-const geocodeBtn = document.getElementById('geocodeBtn');
-geocodeBtn.addEventListener('click', async () => {
-  const lat = parseFloat(document.getElementById('lat').value);
-  const lng = parseFloat(document.getElementById('lng').value);
-  if(isNaN(lat) || isNaN(lng)){
-    setStatus('Isi latitude dan longitude dulu.', true);
-    return;
-  }
-  setStatus('Mencari alamat...');
-  const ok = await fillAddress();
-  setStatus(ok ? 'Alamat berhasil diisi. Boleh dikoreksi manual kalau kurang tepat.' : 'Alamat tidak ditemukan, isi manual saja.', !ok);
-});
-
-async function fillAddress(){
-  const lat = parseFloat(document.getElementById('lat').value);
-  const lng = parseFloat(document.getElementById('lng').value);
-  if(isNaN(lat) || isNaN(lng)) return false;
-  try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`);
-    const data = await res.json();
-    const addr = data.address || {};
-    document.getElementById('jalan').value = addr.road || addr.pedestrian || addr.footway || '';
-    document.getElementById('desa').value = addr.village || addr.suburb || addr.hamlet || addr.neighbourhood || '';
-    document.getElementById('kecamatan').value = addr.city_district || addr.suburb || addr.district || '';
-    document.getElementById('kota').value = addr.city || addr.town || addr.county || addr.regency || '';
-    document.getElementById('provinsi').value = addr.state || '';
-    document.getElementById('kodepos').value = addr.postcode || '';
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-function setStatus(msg, isErr){
-  statusEl.textContent = msg;
-  statusEl.className = 'status' + (isErr ? ' err' : '');
-}
-
-function formatCoordPart(value, posLetter, negLetter, showDegree){
-  const deg = showDegree ? '\u00B0' : '';
-  return `${Math.abs(value).toFixed(6)}${deg} ${value >= 0 ? posLetter : negLetter}`;
-}
-
 function toDMS(value){
   const abs = Math.abs(value);
   let d = Math.floor(abs);
-  let mFloat = (abs - d) * 60;
-  let m = Math.floor(mFloat);
-  let s = Math.round((mFloat - m) * 60);
+  let mf = (abs - d) * 60;
+  let m = Math.floor(mf);
+  let s = Math.round((mf - m) * 60);
   if(s >= 60){ s -= 60; m += 1; }
   if(m >= 60){ m -= 60; d += 1; }
   return `${d}\u00B0${m}'${s}"`;
 }
+function readInfo(){
+  const lat = parseFloat($('lat').value), lng = parseFloat($('lng').value);
+  const v = (id) => $(id).value.trim();
+  const lines = [];
+  if(v('jalan')) lines.push(v('jalan'));
+  if(v('desa')) lines.push(v('desa'));
+  if(v('kecamatan')) lines.push(`Kec. ${v('kecamatan')}`);
+  if(v('kota')) lines.push(`Kabupaten ${v('kota')}`);
+  const last = [v('provinsi'), v('kodepos')].filter(Boolean).join(' ');
+  if(last) lines.push(last);
+  return {
+    lat, lng, hasCoord: !isNaN(lat) && !isNaN(lng),
+    date: fmtDate($('tanggal').value), time: fmtTime($('waktu').value),
+    showDegree: $('showDegree').checked, lokLines: lines,
+    addrShort: lines.join(', ')
+  };
+}
+
+/* ---------- map ---------- */
+const MAPBOX_TOKEN = 'pk.eyJ1IjoicmV5bnMyNSIsImEiOiJjbXU2Y2J3MzAwNWJuMnpvYXl6M2toZmd2In0.MPVbzanjlna7F3SyHtfc_A';
+const PIN_SVG_PATH = new Path2D('M3.37892 10.2236L8 16L12.6211 10.2236C13.5137 9.10788 14 7.72154 14 6.29266V6C14 2.68629 11.3137 0 8 0C4.68629 0 2 2.68629 2 6V6.29266C2 7.72154 2.4863 9.10788 3.37892 10.2236ZM8 8C9.10457 8 10 7.10457 10 6C10 4.89543 9.10457 4 8 4C6.89543 4 6 4.89543 6 6C6 7.10457 6.89543 8 8 8Z');
 
 function project(lat, lon, zoom){
   const scale = 256 * Math.pow(2, zoom);
@@ -783,273 +363,649 @@ function project(lat, lon, zoom){
   const y = (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * scale;
   return { x, y };
 }
-
-// Mapbox access token embedded directly in the code — replace with your own token.
-// WARNING: anyone who opens/views this file's source can see and use this token.
-const MAPBOX_TOKEN = 'pk.eyJ1IjoicmV5bnMyNSIsImEiOiJjbXU2Y2J3MzAwNWJuMnpvYXl6M2toZmd2In0.MPVbzanjlna7F3SyHtfc_A';
-
-// user-supplied pin icon (16x16 viewBox, tip at 8,16), recolored via fillStyle at draw time
-const PIN_SVG_PATH = new Path2D('M3.37892 10.2236L8 16L12.6211 10.2236C13.5137 9.10788 14 7.72154 14 6.29266V6C14 2.68629 11.3137 0 8 0C4.68629 0 2 2.68629 2 6V6.29266C2 7.72154 2.4863 9.10788 3.37892 10.2236ZM8 8C9.10457 8 10 7.10457 10 6C10 4.89543 9.10457 4 8 4C6.89543 4 6 4.89543 6 6C6 7.10457 6.89543 8 8 8Z');
-
 function loadTile(z, x, y, style){
   return new Promise((resolve) => {
-    const tilesPerRow = Math.pow(2, z);
-    const wrappedX = ((x % tilesPerRow) + tilesPerRow) % tilesPerRow;
-    if(y < 0 || y >= tilesPerRow){ resolve(null); return; }
-    const token = MAPBOX_TOKEN.trim();
-    if(!token){ resolve(null); return; }
+    const n = Math.pow(2, z);
+    const wx = ((x % n) + n) % n;
+    if(y < 0 || y >= n){ resolve(null); return; }
     const styleId = style === 'satelit' ? 'satellite-streets-v12' : 'streets-v12';
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
-    img.src = `https://api.mapbox.com/styles/v1/mapbox/${styleId}/tiles/256/${z}/${wrappedX}/${y}?access_token=${encodeURIComponent(token)}`;
+    img.src = `https://api.mapbox.com/styles/v1/mapbox/${styleId}/tiles/256/${z}/${wx}/${y}?access_token=${encodeURIComponent(MAPBOX_TOKEN)}`;
   });
 }
-
 async function buildMapThumbnail(lat, lon, size, zoom, style){
   const map = document.createElement('canvas');
-  map.width = size;
-  map.height = size;
+  map.width = size; map.height = size;
   const ctx = map.getContext('2d');
   ctx.fillStyle = '#E5E5EA';
   ctx.fillRect(0, 0, size, size);
-
   const { x: px, y: py } = project(lat, lon, zoom);
-  const originX = px - size / 2;
-  const originY = py - size / 2;
-  const firstTileX = Math.floor(originX / 256);
-  const firstTileY = Math.floor(originY / 256);
-  const lastTileX = Math.floor((originX + size) / 256);
-  const lastTileY = Math.floor((originY + size) / 256);
-
-  let anyLoaded = false;
+  const ox = px - size / 2, oy = py - size / 2;
+  let any = false;
   const jobs = [];
-  for(let tx = firstTileX; tx <= lastTileX; tx++){
-    for(let ty = firstTileY; ty <= lastTileY; ty++){
-      jobs.push(
-        loadTile(zoom, tx, ty, style).then((img) => {
-          if(img){
-            anyLoaded = true;
-            ctx.drawImage(img, tx * 256 - originX, ty * 256 - originY, 256, 256);
-          }
-        })
-      );
+  for(let tx = Math.floor(ox / 256); tx <= Math.floor((ox + size) / 256); tx++){
+    for(let ty = Math.floor(oy / 256); ty <= Math.floor((oy + size) / 256); ty++){
+      jobs.push(loadTile(zoom, tx, ty, style).then((img) => {
+        if(img){ any = true; ctx.drawImage(img, tx * 256 - ox, ty * 256 - oy, 256, 256); }
+      }));
     }
   }
   await Promise.all(jobs);
-
-  // draw the uploaded pin SVG, scaled so its tip (at 8,16 in the 16x16 viewBox) sits exactly on the coordinate
-  const tipX = size / 2, tipY = size / 2;
-  const pinPixelHeight = size * 0.22;
-  const scale = pinPixelHeight / 16;
-
+  const scale = (size * 0.22) / 16;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.35)';
   ctx.shadowBlur = size * 0.02;
   ctx.shadowOffsetY = size * 0.006;
-  ctx.translate(tipX - 8 * scale, tipY - 16 * scale);
+  ctx.translate(size / 2 - 8 * scale, size / 2 - 16 * scale);
   ctx.scale(scale, scale);
   ctx.fillStyle = '#FF3B30';
   ctx.fill(PIN_SVG_PATH, 'evenodd');
   ctx.restore();
-
-  return { canvas: map, ok: anyLoaded };
+  return { canvas: map, ok: any };
+}
+let mapCache = { key: '', canvas: null, status: 'none', promise: null };
+function getMap(lat, lng){
+  const key = `${lat}|${lng}|${S.mapStyle}`;
+  if(mapCache.key === key) return mapCache;
+  const entry = { key, canvas: null, status: 'loading', promise: null };
+  mapCache = entry;
+  entry.promise = new Promise((resolve) => {
+    setTimeout(async () => {
+      if(mapCache !== entry){ resolve(); return; }
+      let r = { ok: false };
+      try{ r = await buildMapThumbnail(lat, lng, 512, 16, S.mapStyle); }catch(e){}
+      entry.canvas = r.ok ? r.canvas : null;
+      entry.status = r.ok ? 'ok' : 'fail';
+      if(mapCache === entry) requestRender();
+      resolve();
+    }, 350);
+  });
+  return entry;
 }
 
-generateBtn.addEventListener('click', async () => {
-  const tanggal = document.getElementById('tanggal').value;
-  const waktu = document.getElementById('waktu').value;
-  const lat = parseFloat(document.getElementById('lat').value);
-  const lng = parseFloat(document.getElementById('lng').value);
-  const showDegree = document.getElementById('showDegree').checked;
-
-  if(!uploadedImg){ setStatus('Pilih foto dulu.', true); return; }
-  if(isNaN(lat) || isNaN(lng)){ setStatus('Isi latitude dan longitude.', true); return; }
-
-  generateBtn.disabled = true;
-  generateBtn.classList.add('loading');
-  document.getElementById('generateBtnText').textContent = 'Membuat...';
-  setStatus('Membuat gambar...');
-
-  // work out target canvas size from the chosen ratio, capped so it stays fast
-  const ratioMap = { 'original': uploadedImg.width / uploadedImg.height, '1:1': 1, '4:3': 4/3, '3:4': 3/4, '16:9': 16/9, '9:16': 9/16 };
-  const ratio = ratioMap[selectedRatio] || (uploadedImg.width / uploadedImg.height);
+/* ---------- dimensions ---------- */
+const effStyle = () => (S.mode === 'manual' ? 'overlay' : S.infoStyle);
+function dims(info){
+  const iw = S.img.width, ih = S.img.height;
+  const map = { original: iw / ih, '1:1': 1, '4:3': 4/3, '3:4': 3/4, '16:9': 16/9, '9:16': 9/16 };
+  const ratio = map[S.ratio] || iw / ih;
   const maxSide = 1400;
   let W, H;
-  if(ratio >= 1){ W = maxSide; H = Math.round(W / ratio); }
-  else { H = maxSide; W = Math.round(H * ratio); }
+  if(ratio >= 1){ W = maxSide; H = Math.round(W / ratio); } else { H = maxSide; W = Math.round(H * ratio); }
+  const style = effStyle();
+  let barH = 0, rows = 0;
+  if(style === 'tabel'){
+    rows = 3 + ((info.date || info.time) ? 1 : 0) + (info.addrShort ? 1 : 0);
+    barH = Math.round(W * (0.26 + 0.035 * (rows - 3)));
+  }
+  return { W, H, barH, rows, total: H + barH, style };
+}
 
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  const infoBarHeight = selectedInfoStyle === 'tabel' ? Math.round(W * 0.26) : 0;
-  canvas.height = H + infoBarHeight;
-  const ctx = canvas.getContext('2d');
+/* ---------- render ---------- */
+function render(ctx, preview){
+  const info = readInfo();
+  const D = dims(info);
+  const { W, H } = D;
+  const cv = ctx.canvas;
+  if(cv.width !== W) cv.width = W;
+  if(cv.height !== D.total) cv.height = D.total;
+  const auto = S.mode === 'auto';
+  const hl = [];
 
-  // cover-fit crop using the same pan/zoom the user set in the preview
-  const geom = computeGeom(W, H, uploadedImg.width, uploadedImg.height, cropZoom);
-  const drawX = (W - geom.drawW) / 2 + panFracX * geom.maxPanX;
-  const drawY = (H - geom.drawH) / 2 + panFracY * geom.maxPanY;
-  ctx.drawImage(uploadedImg, drawX, drawY, geom.drawW, geom.drawH);
+  ctx.clearRect(0, 0, W, D.total);
+  ctx.fillStyle = S.bg;
+  ctx.fillRect(0, 0, W, H);
 
-  const jalan = document.getElementById('jalan').value.trim();
-  const desa = document.getElementById('desa').value.trim();
-  const kecamatan = document.getElementById('kecamatan').value.trim();
-  const kota = document.getElementById('kota').value.trim();
-  const provinsi = document.getElementById('provinsi').value.trim();
-  const kodepos = document.getElementById('kodepos').value.trim();
-
-  let mapResult = { ok: false };
-  const minSide = Math.min(W, H);
-
-  if(selectedInfoStyle === 'tabel'){
-    // map fills the left side of the info bar, table fills the right side
-    const barY = H;
-    const mapSize = infoBarHeight;
-    try{
-      mapResult = await buildMapThumbnail(lat, lng, mapSize, 16, selectedMapStyle);
-    }catch(e){ mapResult = { ok: false }; }
-
-    // bar background
-    ctx.fillStyle = '#818181';
-    ctx.fillRect(0, barY, W, infoBarHeight);
-
-    if(mapResult.ok){
-      ctx.drawImage(mapResult.canvas, 0, barY, mapSize, mapSize);
-    }
-
-    // table area to the right of the map
-    const tableX = mapSize;
-    const tableW = W - mapSize;
-    const colLabelW = tableW * 0.32;
-    const colDataW = (tableW - colLabelW) / 2;
-    const rowH = infoBarHeight / 3;
-    const cellFont = Math.max(11, Math.round(infoBarHeight * 0.15));
-
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = Math.max(1, infoBarHeight * 0.01);
-
-    // vertical grid lines
-    [tableX, tableX + colLabelW, tableX + colLabelW + colDataW, W].forEach((x) => {
-      ctx.beginPath();
-      ctx.moveTo(x, barY);
-      ctx.lineTo(x, barY + infoBarHeight);
-      ctx.stroke();
-    });
-    // horizontal grid lines
-    [barY, barY + rowH, barY + rowH * 2, barY + infoBarHeight].forEach((y) => {
-      ctx.beginPath();
-      ctx.moveTo(tableX, y);
-      ctx.lineTo(W, y);
-      ctx.stroke();
-    });
-
-    ctx.textBaseline = 'middle';
-    ctx.font = `600 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    ctx.fillText('Decimal', tableX + colLabelW + colDataW / 2, barY + rowH / 2);
-    ctx.fillText('DMS', tableX + colLabelW + colDataW + colDataW / 2, barY + rowH / 2);
-
-    ctx.font = `600 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText('Latitude', tableX + colLabelW * 0.08, barY + rowH * 1.5);
-    ctx.fillText('Longitude', tableX + colLabelW * 0.08, barY + rowH * 2.5);
-
-    ctx.font = `500 ${cellFont}px -apple-system, "SF Pro Text", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(lat.toFixed(5), tableX + colLabelW + colDataW / 2, barY + rowH * 1.5);
-    ctx.fillText(lng.toFixed(5), tableX + colLabelW + colDataW / 2, barY + rowH * 2.5);
-    ctx.fillText(toDMS(lat), tableX + colLabelW + colDataW + colDataW / 2, barY + rowH * 1.5);
-    ctx.fillText(toDMS(lng), tableX + colLabelW + colDataW + colDataW / 2, barY + rowH * 2.5);
-
-    ctx.textAlign = 'left';
-    ctx.font = `400 ${Math.round(cellFont * 0.55)}px -apple-system, "SF Pro Text", sans-serif`;
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.fillText('\u00A9 Mapbox \u00A9 OpenStreetMap', 6, barY + infoBarHeight - 8);
+  // photo
+  const pe = S.el.photo;
+  const iw = S.img.width, ih = S.img.height;
+  const sc = Math.max(W / iw, H / ih) * pe.s;
+  const dw = iw * sc, dh = ih * sc;
+  let px, py;
+  if(auto){
+    const mx = Math.max(0, (dw - W) / 2), my = Math.max(0, (dh - H) / 2);
+    S.autoPan.x = clamp(S.autoPan.x, -mx, mx);
+    S.autoPan.y = clamp(S.autoPan.y, -my, my);
+    px = (W - dw) / 2 + S.autoPan.x; py = (H - dh) / 2 + S.autoPan.y;
   } else {
-    // scale off the smaller side, so narrow/portrait ratios shrink the map and text together instead of overlapping
-    const mapSize = Math.round(minSide * 0.3);
-    try{
-      mapResult = await buildMapThumbnail(lat, lng, mapSize, 16, selectedMapStyle);
-    }catch(e){ mapResult = { ok: false }; }
+    px = (W - dw) / 2 + pe.x; py = (H - dh) / 2 + pe.y;
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+  ctx.globalAlpha = 1;
+  ctx.drawImage(S.img, px, py, dw, dh);
+  ctx.restore();
+  const bx = Math.max(0, px), by = Math.max(0, py);
+  hl.push({ key: 'photo', x: 0, y: 0, w: W, h: H, box: [bx, by, Math.min(W, px + dw) - bx, Math.min(H, py + dh) - by] });
 
-    const mapX = 0;
-    const mapY = H - mapSize;
+  const minSide = Math.min(W, H);
+  const map = info.hasCoord ? getMap(info.lat, info.lng) : null;
 
-    if(mapResult.ok){
-      ctx.drawImage(mapResult.canvas, mapX, mapY, mapSize, mapSize);
+  if(D.style === 'tabel'){
+    drawTable(ctx, D, info, map);
+  } else {
+    const off = (k, a) => (auto ? 0 : S.el[k][a]);
+    if(info.hasCoord){
+      const m = S.el.map;
+      const ms = Math.round(minSide * 0.3 * m.s);
+      const x = off('map', 'x'), y = H - ms + off('map', 'y');
+      ctx.save();
+      ctx.globalAlpha = m.o;
+      if(map.canvas){
+        ctx.drawImage(map.canvas, x, y, ms, ms);
+      } else if(preview){
+        ctx.fillStyle = 'rgba(229,229,234,0.85)';
+        ctx.fillRect(x, y, ms, ms);
+        ctx.fillStyle = '#6E6E73';
+        ctx.font = `500 ${Math.max(10, Math.round(ms * 0.07))}px ${FONT}`;
+        ctx.textAlign = 'center';
+        ctx.fillText(map.status === 'loading' ? 'Memuat peta…' : 'Peta gagal dimuat', x + ms / 2, y + ms / 2);
+      }
+      ctx.restore();
+      hl.push({ key: 'map', x, y, w: ms, h: ms });
     }
 
     const pad = Math.round(W * 0.02);
-    const textRight = W - pad;
     const baseFont = Math.max(18, Math.round(minSide * 0.05));
+    const ls0 = Math.round(baseFont * 0.7), lh0 = ls0 * 1.05;
+    const right = W - pad, bottom = H - pad;
+    const lok = info.lokLines;
+    const coordBot = bottom - lok.length * lh0;
+    const dtBot = coordBot - (info.hasCoord ? lh0 : 0);
+    const coordLine = info.hasCoord
+      ? `${formatCoordPart(info.lat, 'N', 'S', info.showDegree)} ${formatCoordPart(info.lng, 'E', 'W', info.showDegree)}` : '';
 
-    const coordLine = `${formatCoordPart(lat, 'N', 'S', showDegree)} ${formatCoordPart(lng, 'E', 'W', showDegree)}`;
-
-    const lineSize = Math.round(baseFont * 0.7);
-    const lines = [];
-    if(tanggal && waktu){
-      const [yy, mm, dd] = tanggal.split('-');
-      lines.push({ text: `${dd}/${mm}/${yy}  ${waktu}`, size: lineSize, weight: 600, opacity: 1 });
+    const block = (key, lines, rightX, botY) => {
+      const e = S.el[key];
+      const size = ls0 * e.s, lh = size * 1.05;
+      const top = botY - lines.length * lh + off(key, 'y');
+      const rx = rightX + off(key, 'x');
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.font = `600 ${size}px ${FONT}`;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = 'rgba(0,0,0,0.55)';
+      ctx.shadowBlur = Math.round(baseFont * 0.18);
+      ctx.shadowOffsetY = 1;
+      let w = 0;
+      lines.forEach((t, i) => {
+        ctx.fillText(t, rx, top + lh * (i + 0.8));
+        w = Math.max(w, ctx.measureText(t).width);
+      });
+      ctx.restore();
+      hl.push({ key, x: rx - w, y: top, w, h: lines.length * lh });
+      return w;
+    };
+    if(lok.length) block('lokasi', lok, right, bottom);
+    if(coordLine) block('coord', [coordLine], right, coordBot);
+    let dateRight = right;
+    if(info.time){
+      const tw = block('time', [info.time], right, dtBot);
+      dateRight = right - tw - ls0 * 0.6;
     }
-    lines.push({ text: coordLine, size: lineSize, weight: 600, opacity: 1 });
-    if(jalan) lines.push({ text: jalan, size: lineSize, weight: 600, opacity: 1 });
-    if(desa) lines.push({ text: desa, size: lineSize, weight: 600, opacity: 1 });
-    if(kecamatan) lines.push({ text: `Kec. ${kecamatan}`, size: lineSize, weight: 600, opacity: 1 });
-    if(kota) lines.push({ text: `Kabupaten ${kota}`, size: lineSize, weight: 600, opacity: 1 });
-    const lastLine = [provinsi, kodepos].filter(Boolean).join(' ');
-    if(lastLine) lines.push({ text: lastLine, size: lineSize, weight: 600, opacity: 1 });
+    if(info.date) block('date', [info.date], dateRight, dtBot);
 
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'alphabetic';
-    ctx.shadowColor = 'rgba(0,0,0,0.55)';
-    ctx.shadowBlur = Math.round(baseFont * 0.18);
-    ctx.shadowOffsetY = 1;
-
-    const lineGaps = lines.map((l) => l.size * 1.05);
-    const totalHeight = lineGaps.reduce((a, b) => a + b, 0);
-    const blockBottom = H - pad;
-    let textY = blockBottom - totalHeight + lineGaps[0] * 0.8;
-
-    lines.forEach((l, i) => {
-      ctx.font = `${l.weight} ${l.size}px -apple-system, "SF Pro Text", "Segoe UI", sans-serif`;
-      ctx.fillStyle = `rgba(255,255,255,${l.opacity})`;
-      ctx.fillText(l.text, textRight, textY);
-      textY += lineGaps[i];
-    });
-
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    ctx.save();
     ctx.textAlign = 'left';
-    ctx.font = `400 ${Math.round(baseFont * 0.3)}px -apple-system, "SF Pro Text", sans-serif`;
+    ctx.font = `400 ${Math.round(baseFont * 0.3)}px ${FONT}`;
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.fillText('\u00A9 Mapbox \u00A9 OpenStreetMap', 10, H - 8);
+    ctx.restore();
   }
 
-  finalCanvas = canvas;
-  canvasFrame.innerHTML = '';
-  canvasFrame.appendChild(canvas);
-  downloadBtn.disabled = false;
-  generateBtn.disabled = false;
-  generateBtn.classList.remove('loading');
-  document.getElementById('generateBtnText').textContent = 'Buat gambar';
-  setStatus(mapResult.ok ? 'Selesai.' : 'Selesai (cuplikan peta gagal dimuat, gambar tetap dibuat).', !mapResult.ok);
+  // selection indicator (preview only)
+  if(preview && S.mode === 'manual' && S.sel){
+    const h = hl.find((q) => q.key === S.sel);
+    if(h){
+      const [x, y, w, hh] = h.box || [h.x, h.y, h.w, h.h];
+      const z = S.view.zoom;
+      ctx.save();
+      ctx.strokeStyle = '#0A84FF';
+      ctx.lineWidth = 2 / z;
+      ctx.setLineDash([6 / z, 4 / z]);
+      ctx.strokeRect(x, y, w, hh);
+      ctx.setLineDash([]);
+      const hs = 8 / z;
+      ctx.fillStyle = '#FFFFFF';
+      [[x, y], [x + w, y], [x, y + hh], [x + w, y + hh]].forEach(([cx, cy]) => {
+        ctx.fillRect(cx - hs / 2, cy - hs / 2, hs, hs);
+        ctx.strokeRect(cx - hs / 2, cy - hs / 2, hs, hs);
+      });
+      ctx.restore();
+    }
+  }
+  return { D, hl };
+}
+
+function drawTable(ctx, D, info, map){
+  const { W, H, barH, rows } = D;
+  const y0 = H, rowH = barH / rows, mapS = barH;
+  ctx.fillStyle = '#818181';
+  ctx.fillRect(0, y0, W, barH);
+  if(map && map.canvas){
+    ctx.save(); ctx.globalAlpha = S.el.map.o;
+    ctx.drawImage(map.canvas, 0, y0, mapS, mapS);
+    ctx.restore();
+  }
+  const tx = mapS, tw = W - mapS, lw = tw * 0.32, dw = (tw - lw) / 2;
+  const hasDT = !!(info.date || info.time), hasAddr = !!info.addrShort;
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = Math.max(1, barH * 0.01);
+  const line = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
+  [tx, tx + lw, W].forEach((x) => line(x, y0, x, y0 + barH));
+  for(let r = 0; r <= rows; r++) line(tx, y0 + rowH * r, W, y0 + rowH * r);
+  const midEnd = hasAddr ? rows - 1 : rows;
+  line(tx + lw + dw, y0, tx + lw + dw, y0 + rowH * midEnd);
+
+  const f = Math.max(11, Math.round(rowH * 0.45));
+  const cell = (text, cx, cy, align, scale, weight, maxW, alpha) => {
+    let size = Math.min(f * scale, rowH * 0.9);
+    ctx.font = `${weight} ${size}px ${FONT}`;
+    const w = ctx.measureText(text).width;
+    if(w > maxW){ size *= maxW / w; ctx.font = `${weight} ${size}px ${FONT}`; }
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#FFFFFF'; ctx.textAlign = align; ctx.textBaseline = 'middle';
+    ctx.fillText(text, cx, cy);
+    ctx.restore();
+  };
+  const c1 = tx + lw + dw / 2, c2 = tx + lw + dw + dw / 2;
+  const cy = (r) => y0 + rowH * (r + 0.5);
+  const ce = S.el.coord;
+  cell('Decimal', c1, cy(0), 'center', 1, 600, dw * 0.92, 1);
+  cell('DMS', c2, cy(0), 'center', 1, 600, dw * 0.92, 1);
+  cell('Latitude', tx + lw * 0.08, cy(1), 'left', ce.s, 600, lw * 0.88, ce.o);
+  cell('Longitude', tx + lw * 0.08, cy(2), 'left', ce.s, 600, lw * 0.88, ce.o);
+  cell(info.hasCoord ? info.lat.toFixed(5) : '-', c1, cy(1), 'center', ce.s, 500, dw * 0.92, ce.o);
+  cell(info.hasCoord ? info.lng.toFixed(5) : '-', c1, cy(2), 'center', ce.s, 500, dw * 0.92, ce.o);
+  cell(info.hasCoord ? toDMS(info.lat) : '-', c2, cy(1), 'center', ce.s, 500, dw * 0.92, ce.o);
+  cell(info.hasCoord ? toDMS(info.lng) : '-', c2, cy(2), 'center', ce.s, 500, dw * 0.92, ce.o);
+  let r = 3;
+  if(hasDT){
+    cell('Waktu', tx + lw * 0.08, cy(r), 'left', 1, 600, lw * 0.88, 1);
+    if(info.date) cell(info.date, c1, cy(r), 'center', S.el.date.s, 500, dw * 0.92, S.el.date.o);
+    if(info.time) cell(info.time, c2, cy(r), 'center', S.el.time.s, 500, dw * 0.92, S.el.time.o);
+    r++;
+  }
+  if(hasAddr){
+    cell('Lokasi', tx + lw * 0.08, cy(r), 'left', 1, 600, lw * 0.88, 1);
+    cell(info.addrShort, tx + lw + dw * 0.1, cy(r), 'left', S.el.lokasi.s, 500, dw * 1.8, S.el.lokasi.o);
+  }
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.font = `400 ${Math.round(f * 0.55)}px ${FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillText('\u00A9 Mapbox \u00A9 OpenStreetMap', 6, y0 + barH - 8);
+  ctx.restore();
+}
+
+/* ---------- render scheduling & view ---------- */
+let rafId = 0;
+function requestRender(){
+  if(rafId) return;
+  rafId = requestAnimationFrame(() => { rafId = 0; draw(); });
+}
+function draw(){
+  if(!S.img) return;
+  const r = render(vctx, true);
+  hits = r.hl;
+  const key = `${r.D.W}x${r.D.total}`;
+  if(key !== lastDims){
+    lastDims = key;
+    if(S.view.fitted) fitView();
+  }
+  applyView();
+}
+function applyView(){
+  const v = S.view;
+  viewCanvas.style.transform = `translate(${v.x}px,${v.y}px) scale(${v.zoom})`;
+  $('zoomLabel').textContent = Math.round(v.zoom * 100) + '%';
+}
+function fitView(){
+  if(!S.img) return;
+  const sw = stage.clientWidth, sh = stage.clientHeight;
+  const cw = viewCanvas.width, ch = viewCanvas.height;
+  if(!sw || !sh || !cw) return;
+  const z = clamp(Math.min((sw - 32) / cw, (sh - 32) / ch, 1), 0.05, 4);
+  S.view.zoom = z;
+  S.view.x = (sw - cw * z) / 2;
+  S.view.y = (sh - ch * z) / 2;
+  S.view.fitted = true;
+  applyView();
+}
+function zoomAt(newZ, px, py){
+  const v = S.view;
+  newZ = clamp(newZ, 0.05, 4);
+  v.x = px - (px - v.x) * newZ / v.zoom;
+  v.y = py - (py - v.y) * newZ / v.zoom;
+  v.zoom = newZ;
+  v.fitted = false;
+  applyView();
+  if(S.sel) requestRender();
+}
+function stageCenterZoom(factor){
+  zoomAt(S.view.zoom * factor, stage.clientWidth / 2, stage.clientHeight / 2);
+}
+$('zoomIn').addEventListener('click', () => stageCenterZoom(1.25));
+$('zoomOut').addEventListener('click', () => stageCenterZoom(0.8));
+$('zoomFit').addEventListener('click', () => { fitView(); if(S.sel) requestRender(); });
+$('zoomLabel').addEventListener('click', () => zoomAt(1, stage.clientWidth / 2, stage.clientHeight / 2));
+new ResizeObserver(() => { if(S.view.fitted) fitView(); }).observe(stage);
+
+/* ---------- pointer interaction ---------- */
+const pts = new Map();
+let gesture = null, pinch = null, spaceDown = false;
+function toCanvas(e){
+  const r = stage.getBoundingClientRect();
+  return { x: (e.clientX - r.left - S.view.x) / S.view.zoom, y: (e.clientY - r.top - S.view.y) / S.view.zoom };
+}
+function hitTest(cx, cy){
+  const pad = 4 / S.view.zoom;
+  for(let i = hits.length - 1; i >= 0; i--){
+    const h = hits[i];
+    if(cx >= h.x - pad && cx <= h.x + h.w + pad && cy >= h.y - pad && cy <= h.y + h.h + pad) return h.key;
+  }
+  return null;
+}
+function select(k){
+  S.sel = k;
+  syncUI();
+  requestRender();
+}
+stage.addEventListener('pointerdown', (e) => {
+  if(e.target.closest('#emptyBtn')) return;
+  try{ stage.setPointerCapture(e.pointerId); }catch(_){}
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if(!S.img) return;
+  if(pts.size === 2){
+    const [a, b] = [...pts.values()];
+    const r = stage.getBoundingClientRect();
+    pinch = {
+      d: Math.hypot(a.x - b.x, a.y - b.y), z: S.view.zoom,
+      cx: (a.x + b.x) / 2 - r.left, cy: (a.y + b.y) / 2 - r.top
+    };
+    gesture = null;
+    return;
+  }
+  const c = toCanvas(e);
+  const forcePan = e.button === 1 || spaceDown;
+  const startView = { type: 'view', sx: e.clientX, sy: e.clientY, ox: S.view.x, oy: S.view.y };
+  if(!forcePan){
+    if(S.mode === 'manual'){
+      const k = hitTest(c.x, c.y);
+      if(k){
+        select(k);
+        gesture = { type: 'pending', key: k, sx: e.clientX, sy: e.clientY, ox: S.el[k].x, oy: S.el[k].y };
+        return;
+      }
+      if(S.sel) select(null);
+    } else if(c.x >= 0 && c.x <= viewCanvas.width && c.y >= 0 && c.y <= dimsCache.H){
+      gesture = { type: 'photoPan', sx: e.clientX, sy: e.clientY, ox: S.autoPan.x, oy: S.autoPan.y };
+      return;
+    }
+  }
+  gesture = startView;
+});
+let dimsCache = { H: 0 };
+stage.addEventListener('pointermove', (e) => {
+  if(pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if(pinch && pts.size >= 2){
+    const [a, b] = [...pts.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    zoomAt(pinch.z * d / pinch.d, pinch.cx, pinch.cy);
+    return;
+  }
+  if(gesture){
+    const dx = e.clientX - gesture.sx, dy = e.clientY - gesture.sy;
+    if(gesture.type === 'view'){
+      S.view.x = gesture.ox + dx; S.view.y = gesture.oy + dy; S.view.fitted = false; applyView();
+    } else if(gesture.type === 'pending'){
+      if(Math.hypot(dx, dy) > 4) gesture.type = 'elem';
+    }
+    if(gesture.type === 'elem'){
+      const e2 = S.el[gesture.key];
+      e2.x = gesture.ox + dx / S.view.zoom;
+      e2.y = gesture.oy + dy / S.view.zoom;
+      requestRender();
+    } else if(gesture.type === 'photoPan'){
+      S.autoPan.x = gesture.ox + dx / S.view.zoom;
+      S.autoPan.y = gesture.oy + dy / S.view.zoom;
+      requestRender();
+    }
+    return;
+  }
+  if(S.img && S.mode === 'manual' && e.buttons === 0){
+    const c = toCanvas(e);
+    stage.style.cursor = hitTest(c.x, c.y) ? 'move' : 'default';
+  } else if(S.img && S.mode === 'auto' && e.buttons === 0){
+    const c = toCanvas(e);
+    stage.style.cursor = (c.x >= 0 && c.x <= viewCanvas.width && c.y >= 0 && c.y <= dimsCache.H) ? 'grab' : 'default';
+  }
+});
+function endPointer(e){
+  pts.delete(e.pointerId);
+  if(pts.size < 2) pinch = null;
+  if(pts.size === 0) gesture = null;
+}
+stage.addEventListener('pointerup', endPointer);
+stage.addEventListener('pointercancel', endPointer);
+stage.addEventListener('wheel', (e) => {
+  if(!S.img) return;
+  e.preventDefault();
+  if(e.ctrlKey || e.metaKey){
+    const r = stage.getBoundingClientRect();
+    zoomAt(S.view.zoom * Math.exp(-e.deltaY * 0.01), e.clientX - r.left, e.clientY - r.top);
+  } else {
+    S.view.x -= e.shiftKey ? e.deltaY : e.deltaX;
+    S.view.y -= e.shiftKey ? 0 : e.deltaY;
+    S.view.fitted = false;
+    applyView();
+  }
+}, { passive: false });
+const isTyping = (t) => t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA');
+window.addEventListener('keydown', (e) => {
+  if(e.code === 'Space' && !isTyping(e.target)){ spaceDown = true; if(S.img) e.preventDefault(); }
+  if(isTyping(e.target) || !S.img) return;
+  if(e.key === 'Escape' && S.sel){ select(null); return; }
+  if(S.mode === 'manual' && S.sel && e.key.startsWith('Arrow')){
+    e.preventDefault();
+    const st = e.shiftKey ? 10 : 1, el = S.el[S.sel];
+    if(e.key === 'ArrowLeft') el.x -= st;
+    if(e.key === 'ArrowRight') el.x += st;
+    if(e.key === 'ArrowUp') el.y -= st;
+    if(e.key === 'ArrowDown') el.y += st;
+    requestRender();
+  }
+});
+window.addEventListener('keyup', (e) => { if(e.code === 'Space') spaceDown = false; });
+
+/* ---------- sliders ---------- */
+const SL = [
+  { k: 'photo', p: 's', label: 'Ukuran foto', min: 25, max: 300 },
+  { k: 'map', p: 's', label: 'Ukuran peta', min: 30, max: 200 },
+  { k: 'map', p: 'o', label: 'Opacity peta', min: 0, max: 100 },
+  { k: 'lokasi', p: 's', label: 'Teks lokasi', min: 30, max: 250 },
+  { k: 'date', p: 's', label: 'Teks tanggal', min: 30, max: 250 },
+  { k: 'time', p: 's', label: 'Teks waktu', min: 30, max: 250 },
+  { k: 'coord', p: 's', label: 'Teks koordinat', min: 30, max: 250 }
+];
+const sliderBody = $('sliderBody');
+SL.forEach((d, i) => {
+  const row = document.createElement('div');
+  row.className = 'slider-row';
+  row.innerHTML = `<span class="n">${d.label}</span><input type="range" min="${d.min}" max="${d.max}" value="100" data-i="${i}"><span class="v">100%</span><button class="rs" title="Kembalikan ke default" data-i="${i}">↺</button>`;
+  sliderBody.appendChild(row);
+  d.input = row.querySelector('input'); d.out = row.querySelector('.v');
+  d.input.addEventListener('input', () => { S.el[d.k][d.p] = d.input.value / 100; syncUI(); requestRender(); });
+  row.querySelector('.rs').addEventListener('click', () => { S.el[d.k][d.p] = 1; syncUI(); requestRender(); });
+});
+function syncUI(){
+  SL.forEach((d) => {
+    const v = Math.round(S.el[d.k][d.p] * 100);
+    d.input.value = v; d.out.textContent = v + '%';
+  });
+  document.querySelectorAll('#elChips button').forEach((b) => b.classList.toggle('active', b.dataset.el === S.sel));
+  const has = !!S.sel;
+  $('resetElBtn').disabled = !has; $('deselBtn').disabled = !has;
+}
+
+/* ---------- controls ---------- */
+function segBind(groupId, attr, cb){
+  const g = $(groupId);
+  g.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    g.querySelectorAll('button').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    cb(b.dataset[attr]);
+  }));
+}
+segBind('ratioGroup', 'ratio', (v) => {
+  S.ratio = v; S.autoPan = { x: 0, y: 0 }; S.el.photo.x = 0; S.el.photo.y = 0;
+  S.view.fitted = true; requestRender();
+});
+segBind('mapStyleGroup', 'style', (v) => { S.mapStyle = v; requestRender(); });
+segBind('infoStyleGroup', 'infostyle', (v) => { S.infoStyle = v; S.view.fitted = true; requestRender(); });
+segBind('modeGroup', 'mode', (v) => {
+  S.mode = v; $('app').dataset.mode = v;
+  if(v === 'auto') S.sel = null;
+  S.view.fitted = true; syncUI();
+  stage.style.cursor = 'default';
+  requestRender();
+});
+$('bgColor').addEventListener('input', () => { S.bg = $('bgColor').value; requestRender(); });
+document.querySelectorAll('.rr').forEach((el) => el.addEventListener('input', requestRender));
+document.querySelectorAll('#elChips button').forEach((b) => b.addEventListener('click', () => select(b.dataset.el)));
+$('resetElBtn').addEventListener('click', () => { if(S.sel){ S.el[S.sel] = defEl(); syncUI(); requestRender(); } });
+$('deselBtn').addEventListener('click', () => select(null));
+$('resetBtn').addEventListener('click', () => {
+  S.el = makeEls(); S.autoPan = { x: 0, y: 0 }; S.sel = null;
+  S.view.fitted = true;
+  syncUI(); requestRender();
+  setStatus('Posisi, ukuran, dan opacity dikembalikan ke default.');
+});
+$('nowBtn').addEventListener('click', () => {
+  const d = new Date(), p = (n) => String(n).padStart(2, '0');
+  $('tanggal').value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  $('waktu').value = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  requestRender();
 });
 
-downloadBtn.addEventListener('click', () => {
-  if(!finalCanvas) return;
+/* ---------- upload ---------- */
+const fotoInput = $('foto'), dropZone = $('dropZone');
+dropZone.addEventListener('click', () => fotoInput.click());
+$('emptyBtn').addEventListener('click', () => fotoInput.click());
+fotoInput.addEventListener('change', () => { if(fotoInput.files[0]) handleFile(fotoInput.files[0]); });
+function dropBind(el, cls){
+  ['dragenter', 'dragover'].forEach((t) => el.addEventListener(t, (e) => { e.preventDefault(); el.classList.add(cls); }));
+  ['dragleave', 'dragend'].forEach((t) => el.addEventListener(t, (e) => { e.preventDefault(); el.classList.remove(cls); }));
+  el.addEventListener('drop', (e) => {
+    e.preventDefault(); el.classList.remove(cls);
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(!f) return;
+    if(!f.type.startsWith('image/')){ setStatus('File yang di-drop bukan gambar.', true); return; }
+    handleFile(f);
+  });
+}
+dropBind(dropZone, 'dragover');
+dropBind(stage, 'dragover');
+function handleFile(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const first = !S.img;
+      S.img = img;
+      dropZone.textContent = file.name + ' · klik untuk ganti';
+      dropZone.classList.add('has-file');
+      S.autoPan = { x: 0, y: 0 };
+      S.el.photo.x = 0; S.el.photo.y = 0;
+      $('empty').style.display = 'none';
+      viewCanvas.style.display = 'block';
+      ['zoomIn', 'zoomOut', 'zoomFit', 'zoomLabel', 'downloadBtn', 'resetBtn'].forEach((id) => { $(id).disabled = false; });
+      S.view.fitted = true;
+      lastDims = '';
+      draw();
+      fitView();
+      setStatus(first ? 'Foto dimuat. Isi koordinat untuk menampilkan peta.' : 'Foto diganti.');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ---------- location ---------- */
+function setStatus(msg, isErr){
+  const el = $('status');
+  el.textContent = msg || '';
+  el.className = isErr ? 'err' : '';
+  el.title = msg || '';
+}
+$('locateBtn').addEventListener('click', () => {
+  if(!navigator.geolocation){ setStatus('Browser ini tidak mendukung geolokasi.', true); return; }
+  setStatus('Mengambil lokasi...');
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    $('lat').value = pos.coords.latitude.toFixed(6);
+    $('lng').value = pos.coords.longitude.toFixed(6);
+    requestRender();
+    setStatus('Lokasi diambil. Mencari alamat...');
+    await fillAddress();
+    setStatus('Lokasi dan alamat berhasil diisi.');
+  }, () => setStatus('Gagal mengambil lokasi. Isi manual saja.', true));
+});
+$('geocodeBtn').addEventListener('click', async () => {
+  if(isNaN(parseFloat($('lat').value)) || isNaN(parseFloat($('lng').value))){ setStatus('Isi latitude dan longitude dulu.', true); return; }
+  setStatus('Mencari alamat...');
+  const ok = await fillAddress();
+  setStatus(ok ? 'Alamat berhasil diisi. Boleh dikoreksi manual.' : 'Alamat tidak ditemukan, isi manual saja.', !ok);
+});
+async function fillAddress(){
+  const lat = parseFloat($('lat').value), lng = parseFloat($('lng').value);
+  if(isNaN(lat) || isNaN(lng)) return false;
   try{
-    const link = document.createElement('a');
-    link.download = 'geotag-photo.jpg';
-    link.href = finalCanvas.toDataURL('image/jpeg', 0.92);
-    link.click();
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`);
+    const a = (await res.json()).address || {};
+    $('jalan').value = a.road || a.pedestrian || a.footway || '';
+    $('desa').value = a.village || a.suburb || a.hamlet || a.neighbourhood || '';
+    $('kecamatan').value = a.city_district || a.suburb || a.district || '';
+    $('kota').value = a.city || a.town || a.county || a.regency || '';
+    $('provinsi').value = a.state || '';
+    $('kodepos').value = a.postcode || '';
+    requestRender();
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---------- export ---------- */
+$('downloadBtn').addEventListener('click', async () => {
+  if(!S.img) return;
+  const info = readInfo();
+  if(info.hasCoord){
+    const m = getMap(info.lat, info.lng);
+    if(m.status === 'loading'){ setStatus('Menunggu peta selesai dimuat...'); await m.promise; }
+  }
+  const c = document.createElement('canvas');
+  const prevSel = S.sel;
+  render(c.getContext('2d'), false);
+  S.sel = prevSel;
+  try{
+    const a = document.createElement('a');
+    a.download = 'geotag-photo.jpg';
+    a.href = c.toDataURL('image/jpeg', 0.92);
+    a.click();
+    setStatus(info.hasCoord && mapCache.status === 'fail' ? 'Terunduh (cuplikan peta gagal dimuat).' : 'Gambar diunduh.', info.hasCoord && mapCache.status === 'fail');
   }catch(e){
     setStatus('Gagal mengunduh: browser memblokir ekspor karena gambar peta lintas-domain.', true);
   }
 });
+
+// keep a cached photo-frame height for hover/hit checks in auto mode
+const _draw = draw;
+draw = function(){ _draw(); if(S.img){ const D = dims(readInfo()); dimsCache = { H: D.H }; } };
+
+syncUI();
 </script>
 </body>
 </html>
